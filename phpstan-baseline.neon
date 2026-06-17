@@ -1,0 +1,409 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method App\\Actions\\Fortify\\CreateNewUser\:\:passwordRules\(\) should return array\<int, array\<mixed\>\|Illuminate\\Contracts\\Validation\\ValidationRule\|string\> but returns array\<int, Illuminate\\Validation\\Rules\\Password\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Fortify/CreateNewUser.php
+
+		-
+			message: '#^Method App\\Actions\\Fortify\\ResetUserPassword\:\:passwordRules\(\) should return array\<int, array\<mixed\>\|Illuminate\\Contracts\\Validation\\ValidationRule\|string\> but returns array\<int, Illuminate\\Validation\\Rules\\Password\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Fortify/ResetUserPassword.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\LoginResponse\:\:currentTeam\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Responses/LoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\LoginResponse\:\:currentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/LoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\LoginResponse\:\:redirectPathForCurrentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/LoginResponse.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currentTeam" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Responses/LoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\PasskeyLoginResponse\:\:currentTeam\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Responses/PasskeyLoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\PasskeyLoginResponse\:\:currentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/PasskeyLoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\PasskeyLoginResponse\:\:redirectPathForCurrentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/PasskeyLoginResponse.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currentTeam" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Responses/PasskeyLoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\RegisterResponse\:\:currentTeam\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Responses/RegisterResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\RegisterResponse\:\:currentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/RegisterResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\RegisterResponse\:\:redirectPathForCurrentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/RegisterResponse.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currentTeam" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Responses/RegisterResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\TwoFactorLoginResponse\:\:currentTeam\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Responses/TwoFactorLoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\TwoFactorLoginResponse\:\:currentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/TwoFactorLoginResponse.php
+
+		-
+			message: '#^Method App\\Http\\Responses\\TwoFactorLoginResponse\:\:redirectPathForCurrentTeam\(\) has parameter \$request with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Responses/TwoFactorLoginResponse.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currentTeam" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Responses/TwoFactorLoginResponse.php
+
+		-
+			message: '#^Method App\\Livewire\\Actions\\Logout\:\:__invoke\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Livewire/Actions/Logout.php
+
+		-
+			message: '#^Method App\\Models\\Membership\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\Membership\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\Membership\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Membership.php
+
+		-
+			message: '#^Method App\\Models\\Team\:\:members\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\Team\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, \$this\(App\\Models\\Team\), App\\Models\\Membership, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Team.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/TeamInvitation.php
+
+		-
+			message: '#^Method App\\Models\\TeamInvitation\:\:inviter\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\TeamInvitation\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\TeamInvitation\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/TeamInvitation.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:teamRole\(\) should return App\\Enums\\TeamRole\|null but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/Teams/TeamInvitation.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Notifications/Teams/TeamInvitation.php
+
+		-
+			message: '#^Method App\\Rules\\TeamName\:\:reservedNames\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Rules/TeamName.php
+
+		-
+			message: '#^Method App\\Rules\\TeamName\:\:routesPrefixes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Rules/TeamName.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Database\\Factories\\TeamFactory\:\:definition\(\) should be compatible with return type \(array\<model property of App\\Models\\Team, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\Team\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/TeamFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Database\\Factories\\TeamInvitationFactory\:\:definition\(\) should be compatible with return type \(array\<model property of App\\Models\\TeamInvitation, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\TeamInvitation\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/TeamInvitationFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Database\\Factories\\UserFactory\:\:definition\(\) should be compatible with return type \(array\<model property of App\\Models\\User, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\User\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/UserFactory.php
+
+		-
+			message: '#^Access to an undefined property Pest\\PendingCalls\\TestCall\:\:\$app\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertAuthenticated\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertGuest\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:markTestSkipped\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Symfony\\Component\\HttpFoundation\\Response\:\:getData\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/AuthenticationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/Auth/EmailVerificationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/PasswordConfirmationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:skipUnlessFortifyHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/PasswordResetTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertAuthenticated\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/RegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:skipUnlessFortifyHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Auth/TwoFactorChallengeTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/DashboardTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/DashboardTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExampleTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Settings/ProfileUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: tests/Feature/Settings/SecurityTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertDatabaseHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Settings/SecurityTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:skipUnlessFortifyHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Settings/SecurityTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: tests/Feature/Teams/TeamInvitationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertDatabaseHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Teams/TeamInvitationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertDatabaseMissing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Teams/TeamInvitationTest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/Teams/TeamMemberTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/Teams/TeamMemberTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 14
+			path: tests/Feature/Teams/TeamTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertDatabaseHas\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/Teams/TeamTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:assertSoftDeleted\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/Teams/TeamTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/Teams/TeamTest.php
+
+		-
+			message: '#^Function something\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Pest.php
