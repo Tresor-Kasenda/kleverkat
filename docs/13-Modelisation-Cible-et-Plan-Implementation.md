@@ -139,6 +139,7 @@ Le bon flux est :
 
 ```mermaid
 classDiagram
+    class Category
     class Sector
     class ProductType
     class Company
@@ -151,6 +152,7 @@ classDiagram
     class Lead
     class Team
 
+    Category "1" --> "N" Sector
     Sector "1" --> "N" ProductType
     Sector "1" --> "N" Company
     ProductType "1" --> "N" Questionnaire
@@ -166,15 +168,37 @@ classDiagram
 
 ## 4.2. Tables coeur de metier
 
-### `sectors`
+### `categories`
 
 But :
 
-- definir les grands univers : assurance, banque, energie, telecom.
+- regroupement macro des secteurs (ex: Services financiers, Energie & Industrie, Tech & Telecoms, Sante & Bien-etre, Immobilier & Construction).
+- Ajoute un niveau de navigation au-dessus des secteurs sans alourdir le modele.
 
 Colonnes clefs :
 
 - `id`
+- `name`
+- `slug`
+- `image`
+- `description`
+- `sort_order`
+- `is_active`
+
+Relations :
+
+- `Category "1" --> "N" Sector`
+
+### `sectors`
+
+But :
+
+- representer les grands univers metiers : assurance, banque, energie, telecom.
+
+Colonnes clefs :
+
+- `id`
+- `category_id` (nullable — lie la table `categories`)
 - `name`
 - `slug`
 - `description`
@@ -700,6 +724,7 @@ Avec :
 La meilleure decision pour ce projet est la suivante :
 
 - garder **Laravel + Filament + Livewire**,
+- hierarchie claire **Category -> Sector -> ProductType** pour le catalogue,
 - reutiliser le **systeme Teams** pour l'espace partenaire,
 - separer clairement **product type** et **offer**,
 - stocker les regles de partenaire dans `offer_rules`,
