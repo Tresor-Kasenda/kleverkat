@@ -1,0 +1,37 @@
+# FrankenPHP / Caddy configuration for kleverkat-web.
+# FrankenPHP reads this file (default path: /etc/frankenphp/Caddyfile).
+
+{
+	# Allow extra global options to be injected via env if ever needed.
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp {
+		{$FRANKENPHP_CONFIG}
+	}
+}
+
+# SERVER_NAME defaults to ":80" (plain HTTP). Set it to a real hostname
+# (e.g. "example.com") to let Caddy provision HTTPS automatically.
+{$SERVER_NAME::80} {
+	# Laravel serves everything from public/ (the front controller is index.php).
+	root * /app/public
+
+	# Transparently compress responses.
+	encode zstd gzip
+
+	# Run PHP through FrankenPHP, falling back to index.php for Laravel routing.
+	php_server
+
+	# Minimal security hardening.
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# Send access/error logs to stdout so `docker logs` captures them.
+	log {
+		output stdout
+	}
+}

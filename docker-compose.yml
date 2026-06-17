@@ -1,0 +1,130 @@
+# Development stack for kleverkat-web.
+#
+#   cp .env.docker.example .env
+#   docker compose up -d --build
+#   docker compose exec app php artisan key:generate
+#   docker compose exec app php artisan migrate --seed
+#
+# App:   http://localhost:8000   (admin: http://localhost:8000/admin)
+# Vite:  http://localhost:5173   (HMR dev server)
+
+services:
+  # PHP application served by FrankenPHP. Source is bind-mounted so edits on the
+  # host are reflected instantly (no rebuild needed for PHP/Blade changes).
+  app:
+    build:
+      context: .
+      target: dev
+    env_file: .env
+    environment:
+      SERVER_NAME: ":80"
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Vite dev server (HMR). Uses a NAMED volume for node_modules so it installs
+  # Linux-native binaries instead of the host's macOS ones.
+  vite:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    environment:
+      DOCKER: "true"            # toggles container-friendly HMR in vite.config.js
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+
+  # Queue worker (redis queue). Reuses the dev image.
+  queue:
+    build:
+      context: .
+      target: dev
+    env_file: .env
+    command: php artisan queue:work --tries=3 --timeout=90
+    # This is a worker, not a web server: disable FrankenPHP's inherited HTTP
+    # healthcheck (it would report "unhealthy" since nothing listens on :2019).
+    healthcheck:
+      disable: true
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-kleverkat}"
+      MYSQL_USER: "${DB_USERNAME:-kleverkat}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-secret}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-secret}"
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-secret}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --- Dev-only web tools to inspect mail, MySQL and Redis ---------------------
+  # (These are NOT part of docker-compose.prod.yml on purpose.)
+
+  # Mailpit: captures every outgoing e-mail. Nothing leaves your machine.
+  #   Web UI:  http://localhost:8025      SMTP endpoint: mailpit:1025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP (apps send here, see MAIL_* in .env)
+
+  # Adminer: lightweight database client (much lighter than phpMyAdmin).
+  #   Web UI:  http://localhost:8080   (server is pre-filled with "mysql")
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    depends_on:
+      - mysql
+
+  # Redis Commander: browse Redis keys from the browser. Auto-connects to redis.
+  #   Web UI:  http://localhost:8082
+  #   platform pinned to amd64 (the image has no arm64 build → runs via emulation).
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    platform: linux/amd64
+    environment:
+      REDIS_HOSTS: "local:redis:6379"
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+
+volumes:
+  db-data:
+  redis-data:
+  node_modules:

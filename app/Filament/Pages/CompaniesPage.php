@@ -41,9 +41,9 @@ class CompaniesPage extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Entreprises';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Catalogue';
+    protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static ?int $navigationSort = 3;
 
@@ -114,13 +114,6 @@ class CompaniesPage extends Page implements HasTable
                 TernaryFilter::make('is_active')
                     ->label('Actif'),
             ])
-            ->headerActions([
-                CreateAction::make()
-                    ->label('Créer une entreprise')
-                    ->model(Company::class)
-                    ->schema($this->getCompanyFormSchema())
-                    ->modalWidth('4xl'),
-            ])
             ->recordActions([
                 EditAction::make()
                     ->label('Modifier')
@@ -153,16 +146,16 @@ class CompaniesPage extends Page implements HasTable
                 ->preload()
                 ->unique(Company::class, 'team_id', ignoreRecord: true)
                 ->live()
-                ->afterStateUpdated(fn (Set $set): null => $set('manager_id', null))
+                ->afterStateUpdated(fn(Set $set): null => $set('manager_id', null))
                 ->helperText('Une équipe ne peut être liée qu’à une seule entreprise.'),
             Select::make('manager_id')
                 ->label('Gestionnaire')
-                ->options(fn (Get $get): array => $this->getTeamMemberOptions($get('team_id')))
+                ->options(fn(Get $get): array => $this->getTeamMemberOptions($get('team_id')))
                 ->searchable()
                 ->preload()
                 ->required()
-                ->disabled(fn (Get $get): bool => blank($get('team_id')))
-                ->rule(fn (Get $get) => Rule::exists('team_members', 'user_id')
+                ->disabled(fn(Get $get): bool => blank($get('team_id')))
+                ->rule(fn(Get $get) => Rule::exists('team_members', 'user_id')
                     ->where('team_id', $get('team_id') ?? 0))
                 ->helperText('Le gestionnaire doit déjà être membre de l’équipe partenaire.'),
             TextInput::make('name')
@@ -171,11 +164,11 @@ class CompaniesPage extends Page implements HasTable
                 ->maxLength(255)
                 ->live(onBlur: true)
                 ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
-                    if (($get('slug') ?? '') !== Str::slug((string) $old)) {
+                    if (($get('slug') ?? '') !== Str::slug((string)$old)) {
                         return;
                     }
 
-                    $set('slug', Str::slug((string) $state));
+                    $set('slug', Str::slug((string)$state));
                 }),
             TextInput::make('slug')
                 ->label('Slug')
@@ -235,12 +228,24 @@ class CompaniesPage extends Page implements HasTable
         }
 
         return User::query()
-            ->whereHas('teams', fn ($query) => $query->where('teams.id', $teamId))
+            ->whereHas('teams', fn($query) => $query->where('teams.id', $teamId))
             ->orderBy('name')
             ->get(['users.id', 'users.name', 'users.email'])
-            ->mapWithKeys(fn (User $user): array => [
+            ->mapWithKeys(fn(User $user): array => [
                 $user->id => "{$user->name} ({$user->email})",
             ])
             ->all();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->label('Créer une entreprise')
+                ->icon('heroicon-s-plus')
+                ->model(Company::class)
+                ->schema($this->getCompanyFormSchema())
+                ->modalWidth('4xl'),
+        ];
     }
 }

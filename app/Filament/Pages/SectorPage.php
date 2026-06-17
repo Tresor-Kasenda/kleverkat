@@ -18,6 +18,7 @@ use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -33,8 +34,10 @@ class SectorPage extends Page implements HasTable
 
     protected static ?string $title = 'Gestion des secteurs';
     protected static string|null|UnitEnum $navigationGroup = 'Catalogue';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|null|BackedEnum $navigationIcon = Heroicon::OutlinedHeart;
     protected static ?int $navigationSort = 1;
+
+    protected static ?string $slug = "sectors";
 
     public static function canAccess(): bool
     {
@@ -88,14 +91,6 @@ class SectorPage extends Page implements HasTable
                 TernaryFilter::make('is_active')
                     ->label('Actif'),
             ])
-            ->headerActions([
-                CreateAction::make()
-                    ->label('Créer un secteur')
-                    ->icon('heroicon-s-plus')
-                    ->model(Sector::class)
-                    ->schema($this->getSectorFormSchema())
-                    ->modalWidth('3xl'),
-            ])
             ->recordActions([
                 EditAction::make()
                     ->label('Modifier')
@@ -144,6 +139,18 @@ class SectorPage extends Page implements HasTable
             Toggle::make('is_active')
                 ->label('Actif')
                 ->default(true),
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->label('Créer un secteur')
+                ->icon('heroicon-s-plus')
+                ->model(Sector::class)
+                ->schema($this->getSectorFormSchema())
+                ->modalWidth('3xl'),
         ];
     }
 }

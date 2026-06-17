@@ -3,14 +3,13 @@
 namespace Database\Factories;
 
 use App\Models\Category;
-use App\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<Sector>
+ * @extends Factory<Category>
  */
-class SectorFactory extends Factory
+class CategoryFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -22,7 +21,6 @@ class SectorFactory extends Factory
         $name = fake()->unique()->words(2, true);
 
         return [
-            'category_id' => Category::factory(),
             'name' => Str::title($name),
             'slug' => Str::slug($name),
             'description' => fake()->sentence(),

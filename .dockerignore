@@ -1,0 +1,40 @@
+# --- Version control / IDE ---
+.git
+.github
+.idea
+.vscode
+
+# --- Dependencies (reinstalled inside the image) ---
+/vendor
+/node_modules
+
+# --- Compiled assets (rebuilt by the "frontend" build stage) ---
+/public/build
+/public/hot
+/public/storage
+
+# --- Stale Laravel caches (regenerated at runtime by the entrypoint) ---
+/bootstrap/cache/*.php
+
+# --- Runtime artifacts we never want baked in ---
+/storage/logs/*.log
+/storage/pail
+/database/database.sqlite
+
+# --- Secrets / local env (never copy real env into an image) ---
+.env
+.env.*
+!.env.docker.example
+
+# --- Docker meta (not needed *inside* the image) ---
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.prod.yml
+
+# --- Tests & docs (not shipped in the runtime image) ---
+/tests
+*.md
+
+# --- OS noise ---
+.DS_Store

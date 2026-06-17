@@ -13,25 +13,28 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Field;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Pages\Page;
-use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -96,13 +99,13 @@ class ProductsPage extends Page implements HasTable
                 TextColumn::make('category')
                     ->label('Catégorie')
                     ->badge()
-                    ->formatStateUsing(fn (ProductCategory $state): string => $state->label())
+                    ->formatStateUsing(fn(ProductCategory $state): string => $state->label())
                     ->toggleable(),
                 TextColumn::make('price_type')
                     ->label('Tarif')
-                    ->formatStateUsing(fn (ProductPriceType $state): string => $state->label())
+                    ->formatStateUsing(fn(ProductPriceType $state): string => $state->label())
                     ->badge()
-                    ->color(fn (ProductPriceType $state): string => match ($state) {
+                    ->color(fn(ProductPriceType $state): string => match ($state) {
                         ProductPriceType::Fixed => 'success',
                         ProductPriceType::Variable => 'warning',
                         ProductPriceType::OnQuote => 'gray',
@@ -110,7 +113,7 @@ class ProductsPage extends Page implements HasTable
                     ->toggleable(),
                 TextColumn::make('base_price')
                     ->label('Prime de base')
-                    ->money(fn (Product $record): string => $record->currency)
+                    ->money(fn(Product $record): string => $record->currency)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('duration_months')
                     ->label('Durée (mois)')
@@ -149,12 +152,6 @@ class ProductsPage extends Page implements HasTable
                 TernaryFilter::make('is_featured')
                     ->label('Mis en avant'),
             ])
-            ->headerActions([
-                CreateAction::make()
-                    ->model(Product::class)
-                    ->schema($this->getProductFormSchema())
-                    ->modalWidth('5xl'),
-            ])
             ->recordActions([
                 ViewAction::make()
                     ->schema($this->getProductViewSchema())
@@ -170,7 +167,7 @@ class ProductsPage extends Page implements HasTable
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     protected function getProductViewSchema(): array
     {
@@ -181,7 +178,7 @@ class ProductsPage extends Page implements HasTable
                 ->schema([
                     TextEntry::make('name')
                         ->label('Nom du produit')
-                        ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                        ->weight(FontWeight::Bold)
                         ->columnSpan(2),
                     TextEntry::make('code')
                         ->label('Code interne')
@@ -194,7 +191,7 @@ class ProductsPage extends Page implements HasTable
                     TextEntry::make('category')
                         ->label('Catégorie')
                         ->badge()
-                        ->formatStateUsing(fn (?ProductCategory $state): string => $state?->label() ?? '—'),
+                        ->formatStateUsing(fn(?ProductCategory $state): string => $state?->label() ?? '—'),
                     TextEntry::make('slug')
                         ->label('Slug')
                         ->color('gray'),
@@ -216,8 +213,8 @@ class ProductsPage extends Page implements HasTable
                     TextEntry::make('price_type')
                         ->label('Type de tarif')
                         ->badge()
-                        ->formatStateUsing(fn (?ProductPriceType $state): string => $state?->label() ?? '—')
-                        ->color(fn (?ProductPriceType $state): string => match ($state) {
+                        ->formatStateUsing(fn(?ProductPriceType $state): string => $state?->label() ?? '—')
+                        ->color(fn(?ProductPriceType $state): string => match ($state) {
                             ProductPriceType::Fixed => 'success',
                             ProductPriceType::Variable => 'warning',
                             ProductPriceType::OnQuote => 'gray',
@@ -225,13 +222,13 @@ class ProductsPage extends Page implements HasTable
                         }),
                     TextEntry::make('base_price')
                         ->label('Prime de base')
-                        ->money(fn (Product $record): string => $record->currency)
+                        ->money(fn(Product $record): string => $record->currency)
                         ->placeholder('Sur devis'),
                     TextEntry::make('currency')
                         ->label('Devise'),
                     TextEntry::make('billing_frequency')
                         ->label('Fréquence de facturation')
-                        ->formatStateUsing(fn (?ProductBillingFrequency $state): string => $state?->label() ?? '—')
+                        ->formatStateUsing(fn(?ProductBillingFrequency $state): string => $state?->label() ?? '—')
                         ->placeholder('—'),
                 ]),
 
@@ -253,11 +250,11 @@ class ProductsPage extends Page implements HasTable
                         ->placeholder('Non défini'),
                     TextEntry::make('min_insured_amount')
                         ->label('Montant minimum assuré')
-                        ->money(fn (Product $record): string => $record->currency)
+                        ->money(fn(Product $record): string => $record->currency)
                         ->placeholder('Non défini'),
                     TextEntry::make('max_insured_amount')
                         ->label('Montant maximum assuré')
-                        ->money(fn (Product $record): string => $record->currency)
+                        ->money(fn(Product $record): string => $record->currency)
                         ->placeholder('Non défini'),
                     TextEntry::make('waiting_period_days')
                         ->label('Délai de carence')
@@ -354,11 +351,11 @@ class ProductsPage extends Page implements HasTable
                                     ->maxLength(255)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
-                                        if (($get('slug') ?? '') !== Str::slug((string) $old)) {
+                                        if (($get('slug') ?? '') !== Str::slug((string)$old)) {
                                             return;
                                         }
 
-                                        $set('slug', Str::slug((string) $state));
+                                        $set('slug', Str::slug((string)$state));
                                     }),
                                 TextInput::make('slug')
                                     ->label('Slug')
@@ -395,8 +392,8 @@ class ProductsPage extends Page implements HasTable
                                     ->label('Prime de base')
                                     ->numeric()
                                     ->minValue(0)
-                                    ->prefix(fn (Get $get): string => $get('currency') ?: 'USD')
-                                    ->visible(fn (Get $get): bool => $get('price_type') === ProductPriceType::Fixed->value),
+                                    ->prefix(fn(Get $get): string => $get('currency') ?: 'USD')
+                                    ->visible(fn(Get $get): bool => $get('price_type') === ProductPriceType::Fixed->value),
                                 Select::make('currency')
                                     ->label('Devise')
                                     ->options([
@@ -433,12 +430,12 @@ class ProductsPage extends Page implements HasTable
                                     ->label('Montant minimum assuré')
                                     ->numeric()
                                     ->minValue(0)
-                                    ->prefix(fn (Get $get): string => $get('currency') ?: 'USD'),
+                                    ->prefix(fn(Get $get): string => $get('currency') ?: 'USD'),
                                 TextInput::make('max_insured_amount')
                                     ->label('Montant maximum assuré')
                                     ->numeric()
                                     ->minValue(0)
-                                    ->prefix(fn (Get $get): string => $get('currency') ?: 'USD'),
+                                    ->prefix(fn(Get $get): string => $get('currency') ?: 'USD'),
                                 TextInput::make('duration_months')
                                     ->label('Durée du contrat')
                                     ->numeric()
@@ -509,6 +506,18 @@ class ProductsPage extends Page implements HasTable
                         ]),
                 ])
                 ->columnSpanFull(),
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->label("Ajouter produit")
+                ->icon(Heroicon::OutlinedPlus)
+                ->model(Product::class)
+                ->schema($this->getProductFormSchema())
+                ->modalWidth('5xl'),
         ];
     }
 }
