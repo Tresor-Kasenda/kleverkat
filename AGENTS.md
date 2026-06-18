@@ -4,24 +4,28 @@ Insurance comparison platform. Laravel 13 / Livewire 4 / Filament 5 / Flux UI 2 
 
 ## Quick start
 
+All commands must run inside the Docker app container via `docker compose exec app`:
+
 ```bash
-composer run setup          # full project bootstrap
-composer run dev            # server + queue + logs + Vite (concurrent)
+docker compose exec app composer run setup          # full project bootstrap
+docker compose exec app composer run dev             # server + queue + logs + Vite (concurrent)
 ```
 
 ## Dev commands
 
+Prefix every command with `docker compose exec app`:
+
 | What | Command |
 |------|---------|
-| Format PHP | `composer run lint` (pint) |
-| Check lint | `composer run lint:check` |
-| PHPStan | `composer run phpstan` (level 6) |
-| Full CI | `composer run ci:check` (lint:check → phpstan → test) |
-| Run tests | `php artisan test --compact` or `composer run test` (includes lint) |
-| Run single test | `php artisan test --compact --filter=testName` |
-| Create test | `php artisan make:test --pest {Name}Test` |
-| Build assets | `npm run build` |
-| Read app URL | `laravel-boost_get-absolute-url` or `php artisan config:show app.url` |
+| Format PHP | `docker compose exec app composer run lint` (pint) |
+| Check lint | `docker compose exec app composer run lint:check` |
+| PHPStan | `docker compose exec app composer run phpstan` (level 6) |
+| Full CI | `docker compose exec app composer run ci:check` (lint:check → phpstan → test) |
+| Run tests | `docker compose exec app php artisan test --compact` or `docker compose exec app composer run test` |
+| Run single test | `docker compose exec app php artisan test --compact --filter=testName` |
+| Create test | `docker compose exec app php artisan make:test --pest {Name}Test` |
+| Build assets | `npm run build` (host, not container) |
+| Read app URL | `laravel-boost_get-absolute-url` or `docker compose exec app php artisan config:show app.url` |
 
 ## Architecture
 
@@ -34,7 +38,7 @@ composer run dev            # server + queue + logs + Vite (concurrent)
 
 ## Conventions
 
-- Format PHP with `vendor/bin/pint --format agent` after edits.
+- Format PHP with `docker compose exec app vendor/bin/pint --format agent` after edits.
 - Search package docs before writing code: `laravel-boost_search-docs` (version-aware).
 - Activate the relevant skill from `.agents/skills/` or `.claude/skills/` before working in a domain (fortify, livewire, fluxui, tailwind, pest, laravel best practices).
 - Livewire route syntax: `Route::livewire('path', 'pages::component.name')`.
@@ -44,13 +48,13 @@ composer run dev            # server + queue + logs + Vite (concurrent)
 
 Requires auth credentials:
 ```bash
-composer config http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
+docker compose exec app composer config http-basic.composer.fluxui.dev "$FLUX_USERNAME" "$FLUX_LICENSE_KEY"
 ```
 Credentials are needed in CI (`lint.yml`, `tests.yml`).
 
 ## Quirks
 
-- If frontend changes aren't reflected, run `npm run build` or restart `composer run dev`.
+- If frontend changes aren't reflected, run `npm run build` or restart `docker compose exec app composer run dev`.
 - Vite error "Unable to locate file in Vite manifest" → run `npm run build`.
 - `post-update-cmd` runs `boost:update` — may require database setup.
 
@@ -143,15 +147,15 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Artisan
 
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
-- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
+- Run Artisan commands via `docker compose exec app php artisan` (e.g., `docker compose exec app php artisan route:list`). Use `docker compose exec app php artisan list` to discover available commands and `docker compose exec app php artisan [command] --help` to check parameters.
+- Inspect routes with `docker compose exec app php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
+- Read configuration values using dot notation: `docker compose exec app php artisan config:show app.name`, `docker compose exec app php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 
 ## Tinker
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
-- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+- Always use single quotes to prevent shell expansion: `docker compose exec app php artisan tinker --execute 'Your::code();'`
+  - Double quotes for PHP strings inside: `docker compose exec app php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
@@ -181,13 +185,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 # Do Things the Laravel Way
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
-- If you're creating a generic PHP class, use `php artisan make:class`.
+- Use `docker compose exec app php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `docker compose exec app php artisan list` and check their parameters with `docker compose exec app php artisan [command] --help`.
+- If you're creating a generic PHP class, use `docker compose exec app php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
 ### Model Creation
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `docker compose exec app php artisan make:model --help` to check the available options.
 
 ## APIs & Eloquent Resources
 
@@ -201,11 +205,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- When creating tests, make use of `docker compose exec app php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
 ## Vite Error
 
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` (host) or ask the user to run `composer run dev`.
 
 === livewire/core rules ===
 
@@ -219,16 +223,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 # Laravel Pint Code Formatter
 
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
+- If you have modified any PHP files, you must run `docker compose exec app vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
+- Do not run `docker compose exec app vendor/bin/pint --test --format agent`, simply run `docker compose exec app vendor/bin/pint --format agent` to fix any formatting issues.
 
 === pest/core rules ===
 
 ## Pest
 
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- The `{name}` argument should not include the test suite directory. Use `php artisan make:test --pest SomeFeatureTest` instead of `php artisan make:test --pest Feature/SomeFeatureTest`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
+- This project uses Pest for testing. Create tests: `docker compose exec app php artisan make:test --pest {name}`.
+- The `{name}` argument should not include the test suite directory. Use `docker compose exec app php artisan make:test --pest SomeFeatureTest` instead of `docker compose exec app php artisan make:test --pest Feature/SomeFeatureTest`.
+- Run tests: `docker compose exec app php artisan test --compact` or filter: `docker compose exec app php artisan test --compact --filter=testName`.
 - Do NOT delete tests without approval.
 
 </laravel-boost-guidelines>

@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Enums\TeamRole;
 use App\Models\Company;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -27,6 +30,8 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use UnitEnum;
@@ -43,7 +48,7 @@ class CompaniesPage extends Page implements HasTable
 
     protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
     protected static ?int $navigationSort = 3;
 
@@ -65,7 +70,8 @@ class CompaniesPage extends Page implements HasTable
         return $table
             ->query(
                 Company::query()
-                    ->with(['sector', 'team', 'manager'])
+                    ->whereIn('id', $this->getCachedCompanyIds())
+                    ->with(['category', 'team', 'manager'])
                     ->orderBy('name')
             )
             ->modelLabel('entreprise')
@@ -75,7 +81,7 @@ class CompaniesPage extends Page implements HasTable
                     ->label('Nom')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('sector.name')
+                TextColumn::make('category.name')
                     ->label('Secteur')
                     ->badge()
                     ->sortable(),
@@ -106,9 +112,9 @@ class CompaniesPage extends Page implements HasTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('sector')
-                    ->label('Secteur')
-                    ->relationship('sector', 'name')
+                SelectFilter::make('category')
+                    ->label('Catégorie')
+                    ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
                 TernaryFilter::make('is_active')
@@ -123,118 +129,174 @@ class CompaniesPage extends Page implements HasTable
                     ->label('Supprimer'),
             ])
             ->emptyStateHeading('Aucune entreprise')
-            ->emptyStateDescription('Crée une entreprise partenaire et rattache-la à un secteur.');
+            ->emptyStateDescription('Crée une entreprise partenaire et rattache-la à une catégorie.');
     }
 
     /**
-     * @return array<int, Field>
+     * Company form schema shared by the create and edit actions: a company is
+     * linked to a category, a partner team and the team owner (its manager).
+     *
+     * @return array<int, Component>
      */
     protected function getCompanyFormSchema(): array
     {
         return [
-            Select::make('sector_id')
-                ->label('Secteur')
-                ->relationship('sector', 'name')
-                ->required()
-                ->searchable()
-                ->preload(),
-            Select::make('team_id')
-                ->label('Équipe partenaire')
-                ->relationship('team', 'name')
-                ->required()
-                ->searchable()
-                ->preload()
-                ->unique(Company::class, 'team_id', ignoreRecord: true)
-                ->live()
-                ->afterStateUpdated(fn(Set $set): null => $set('manager_id', null))
-                ->helperText('Une équipe ne peut être liée qu’à une seule entreprise.'),
-            Select::make('manager_id')
-                ->label('Gestionnaire')
-                ->options(fn(Get $get): array => $this->getTeamMemberOptions($get('team_id')))
-                ->searchable()
-                ->preload()
-                ->required()
-                ->disabled(fn(Get $get): bool => blank($get('team_id')))
-                ->rule(fn(Get $get) => Rule::exists('team_members', 'user_id')
-                    ->where('team_id', $get('team_id') ?? 0))
-                ->helperText('Le gestionnaire doit déjà être membre de l’équipe partenaire.'),
-            TextInput::make('name')
-                ->label('Nom')
-                ->required()
-                ->maxLength(255)
-                ->live(onBlur: true)
-                ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
-                    if (($get('slug') ?? '') !== Str::slug((string)$old)) {
-                        return;
-                    }
-
-                    $set('slug', Str::slug((string)$state));
-                }),
-            TextInput::make('slug')
-                ->label('Slug')
-                ->required()
-                ->maxLength(255)
-                ->unique(Company::class, 'slug', ignoreRecord: true),
-            TextInput::make('logo_path')
-                ->label('Chemin du logo')
-                ->maxLength(255),
-            TextInput::make('website_url')
-                ->label('Site web')
-                ->url()
-                ->maxLength(255),
-            TextInput::make('support_email')
-                ->label('Email support')
-                ->email()
-                ->maxLength(255),
-            TextInput::make('support_phone')
-                ->label('Téléphone support')
-                ->tel()
-                ->maxLength(255),
-            TextInput::make('contact_name')
-                ->label('Contact principal')
-                ->maxLength(255),
-            TextInput::make('address_line_1')
-                ->label('Adresse')
-                ->maxLength(255),
-            TextInput::make('address_line_2')
-                ->label("Complément d'adresse")
-                ->maxLength(255),
-            TextInput::make('city')
-                ->label('Ville')
-                ->maxLength(255),
-            TextInput::make('postal_code')
-                ->label('Code postal')
-                ->maxLength(100),
-            TextInput::make('country')
-                ->label('Pays')
-                ->maxLength(255),
-            Textarea::make('description')
-                ->label('Description')
-                ->rows(5)
-                ->columnSpanFull(),
-            Toggle::make('is_active')
-                ->label('Actif')
-                ->default(true),
+            Section::make('Rattachement')
+                ->icon(Heroicon::OutlinedRectangleStack)
+                ->columns(2)
+                ->schema([
+                    Select::make('category_id')
+                        ->label('Secteur d\'activité')
+                        ->relationship('category', 'name')
+                        ->required()
+                        ->searchable()
+                        ->preload(),
+                    Select::make('team_id')
+                        ->label('Équipe partenaire')
+                        ->relationship('team', 'name', fn (Builder $query) => $query->where('is_personal', false))
+                        ->required()
+                        ->searchable()
+                        ->preload()
+                        ->unique(Company::class, 'team_id', ignoreRecord: true)
+                        ->live()
+                        ->afterStateUpdated(fn (Set $set): null => $set('manager_id', null))
+                        ->helperText('Une équipe ne peut être liée qu’à une seule entreprise.'),
+                    Select::make('manager_id')
+                        ->label('Gestionnaire (propriétaire de l’équipe)')
+                        ->options(fn (Get $get): array => $this->getTeamOwnerOptions($get('team_id')))
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->disabled(fn (Get $get): bool => blank($get('team_id')))
+                        ->rule(fn (Get $get) => Rule::exists('team_members', 'user_id')
+                            ->where('team_id', $get('team_id') ?? 0)
+                            ->where('role', TeamRole::Owner->value))
+                        ->helperText('Le gestionnaire est le propriétaire (Owner) de l’équipe partenaire.')
+                        ->columnSpanFull(),
+                ]),
+            ...$this->getProfileSections(),
         ];
     }
 
     /**
+     * Owners (managers) of the given partner team.
+     *
      * @return array<int, string>
      */
-    protected function getTeamMemberOptions(int|string|null $teamId): array
+    protected function getTeamOwnerOptions(int|string|null $teamId): array
     {
         if (blank($teamId)) {
             return [];
         }
 
         return User::query()
-            ->whereHas('teams', fn($query) => $query->where('teams.id', $teamId))
+            ->whereHas('teamMemberships', fn ($query) => $query
+                ->where('team_id', $teamId)
+                ->where('role', TeamRole::Owner->value))
             ->orderBy('name')
             ->get(['users.id', 'users.name', 'users.email'])
-            ->mapWithKeys(fn(User $user): array => [
+            ->mapWithKeys(fn (User $user): array => [
                 $user->id => "{$user->name} ({$user->email})",
             ])
             ->all();
+    }
+
+    /**
+     * Identity, contact, address and status sections.
+     *
+     * @return array<int, Component>
+     */
+    protected function getProfileSections(): array
+    {
+        return [
+            Section::make('Identité')
+                ->icon(Heroicon::OutlinedBuildingOffice2)
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Nom')
+                        ->required()
+                        ->maxLength(255)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
+                            if (($get('slug') ?? '') !== Str::slug((string) $old)) {
+                                return;
+                            }
+
+                            $set('slug', Str::slug((string) $state));
+                        }),
+                    TextInput::make('slug')
+                        ->label('Slug')
+                        ->required()
+                        ->maxLength(255)
+                        ->unique(Company::class, 'slug', ignoreRecord: true),
+                    TextInput::make('logo_path')
+                        ->label('Chemin du logo')
+                        ->maxLength(255),
+                    Textarea::make('description')
+                        ->label('Description')
+                        ->rows(5)
+                        ->columnSpanFull(),
+                ]),
+            Section::make('Coordonnées')
+                ->icon(Heroicon::OutlinedPhone)
+                ->columns(2)
+                ->schema([
+                    TextInput::make('website_url')
+                        ->label('Site web')
+                        ->url()
+                        ->maxLength(255),
+                    TextInput::make('support_email')
+                        ->label('Email support')
+                        ->email()
+                        ->maxLength(255),
+                    TextInput::make('support_phone')
+                        ->label('Téléphone support')
+                        ->tel()
+                        ->maxLength(255),
+                    TextInput::make('contact_name')
+                        ->label('Contact principal')
+                        ->maxLength(255),
+                ]),
+            Section::make('Adresse')
+                ->icon(Heroicon::OutlinedMapPin)
+                ->columns(2)
+                ->schema([
+                    TextInput::make('address_line_1')
+                        ->label('Adresse')
+                        ->maxLength(255),
+                    TextInput::make('address_line_2')
+                        ->label("Complément d'adresse")
+                        ->maxLength(255),
+                    TextInput::make('city')
+                        ->label('Ville')
+                        ->maxLength(255),
+                    TextInput::make('postal_code')
+                        ->label('Code postal')
+                        ->maxLength(100),
+                    TextInput::make('country')
+                        ->label('Pays')
+                        ->maxLength(255),
+                ]),
+            Section::make('Statut')
+                ->schema([
+                    Toggle::make('is_active')
+                        ->label('Actif')
+                        ->default(true),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    protected function getCachedCompanyIds(): array
+    {
+        return Cache::remember('companies:ids', 3600, function () {
+            return Company::query()
+                ->pluck('id')
+                ->toArray();
+        });
     }
 
     protected function getHeaderActions(): array
@@ -242,7 +304,7 @@ class CompaniesPage extends Page implements HasTable
         return [
             CreateAction::make()
                 ->label('Créer une entreprise')
-                ->icon('heroicon-s-plus')
+                ->icon(Heroicon::OutlinedPlus)
                 ->model(Company::class)
                 ->schema($this->getCompanyFormSchema())
                 ->modalWidth('4xl'),

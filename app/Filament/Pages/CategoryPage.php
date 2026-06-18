@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Models\Sector;
+use App\Models\Category;
 use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Field;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Utilities\Get;
@@ -30,19 +30,19 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use UnitEnum;
 
-class SectorPage extends Page implements HasTable
+class CategoryPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $title = 'Gestion des secteurs';
+    protected static ?string $title = 'Gestion des catégories';
 
     protected static string|null|UnitEnum $navigationGroup = 'Catalogue';
 
-    protected static string|null|BackedEnum $navigationIcon = Heroicon::OutlinedHeart;
+    protected static string|null|BackedEnum $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
 
-    protected static ?string $slug = 'sectors';
+    protected static ?string $slug = 'categories';
 
     public static function canAccess(): bool
     {
@@ -61,31 +61,25 @@ class SectorPage extends Page implements HasTable
     {
         return $table
             ->query(
-                Sector::query()
-                    ->whereIn('id', $this->getCachedSectorIds())
-                    ->with('category')
-                    ->withCount('products')
+                Category::query()
+                    ->whereIn('id', $this->getCachedCategoryIds())
+                    ->withCount('sectors')
                     ->orderBy('sort_order')
                     ->orderBy('name')
             )
-            ->modelLabel('secteur')
-            ->pluralModelLabel('secteurs')
+            ->modelLabel('catégorie')
+            ->pluralModelLabel('catégories')
             ->columns([
                 TextColumn::make('name')
                     ->label('Nom')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('category.name')
-                    ->label('Catégorie')
-                    ->badge()
-                    ->searchable()
-                    ->placeholder('Non classé'),
                 TextColumn::make('slug')
                     ->label('Slug')
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('products_count')
-                    ->label('Produits')
+                TextColumn::make('sectors_count')
+                    ->label('Secteurs')
                     ->sortable(),
                 IconColumn::make('is_active')
                     ->label('Actif')
@@ -106,29 +100,26 @@ class SectorPage extends Page implements HasTable
             ->recordActions([
                 EditAction::make()
                     ->label('Modifier')
-                    ->schema($this->getSectorFormSchema())
+                    ->schema($this->getCategoryFormSchema())
                     ->modalWidth('3xl'),
-                DeleteAction::make()->label('Supprimer'),
+                DeleteAction::make()->label('Supprimer')->requiresConfirmation()->successNotification(
+                    Notification::make()
+                        ->title('Categorie supprimer avec succes')
+                        ->success()
+                        ->icon(Heroicon::CheckBadge)
+                ),
             ])
             ->defaultSort('sort_order')
-            ->emptyStateHeading('Aucun secteur')
-            ->emptyStateDescription('Commence par créer un secteur pour organiser le catalogue.');
+            ->emptyStateHeading('Aucune catégorie')
+            ->emptyStateDescription('Commence par créer une catégorie pour regrouper les secteurs.');
     }
 
     /**
      * @return array<int, Field>
      */
-    protected function getSectorFormSchema(): array
+    protected function getCategoryFormSchema(): array
     {
         return [
-            Select::make('category_id')
-                ->label('Catégorie')
-                ->relationship('category', 'name')
-                ->searchable()
-                ->preload()
-                ->native(false)
-                ->placeholder('select category')
-                ->required(),
             TextInput::make('name')
                 ->label('Nom')
                 ->required()
@@ -145,7 +136,7 @@ class SectorPage extends Page implements HasTable
                 ->label('Slug')
                 ->required()
                 ->maxLength(255)
-                ->unique(Sector::class, 'slug', ignoreRecord: true),
+                ->unique(Category::class, 'slug', ignoreRecord: true),
             Textarea::make('description')
                 ->label('Description')
                 ->rows(4)
@@ -165,10 +156,10 @@ class SectorPage extends Page implements HasTable
     /**
      * @return array<int, int>
      */
-    protected function getCachedSectorIds(): array
+    protected function getCachedCategoryIds(): array
     {
-        return Cache::remember('sectors:ids', 3600, function () {
-            return Sector::query()
+        return Cache::remember('categories:ids', 3600, function () {
+            return Category::query()
                 ->pluck('id')
                 ->toArray();
         });
@@ -178,10 +169,10 @@ class SectorPage extends Page implements HasTable
     {
         return [
             CreateAction::make()
-                ->label('Créer un secteur')
+                ->label('Créer une catégorie')
                 ->icon('heroicon-s-plus')
-                ->model(Sector::class)
-                ->schema($this->getSectorFormSchema())
+                ->model(Category::class)
+                ->schema($this->getCategoryFormSchema())
                 ->modalWidth('3xl'),
         ];
     }
