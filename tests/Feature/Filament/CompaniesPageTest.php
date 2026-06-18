@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Team;
 use App\Models\User;
+use App\Notifications\Companies\CompanyAssignedManager;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 test('admin can access companies page and see companies', function () {
@@ -150,6 +152,97 @@ test('admin can edit a company from companies page', function () {
         'city' => 'Kinshasa',
         'is_active' => false,
     ]);
+});
+
+test('notification is sent to manager when company is created', function () {
+    Notification::fake();
+
+    $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(CompaniesPage::class)
+        ->callAction('create', data: [
+            'category_id' => $category->id,
+            'team_id' => $team->id,
+            'manager_id' => $owner->id,
+            'name' => 'Allianz Congo',
+            'slug' => 'allianz-congo',
+            'is_active' => true,
+        ])
+        ->assertHasNoFormErrors();
+
+    Notification::assertSentTo($owner, CompanyAssignedManager::class, function (CompanyAssignedManager $notification): bool {
+        return $notification->isNew === true
+            && $notification->company->name === 'Allianz Congo';
+    });
+});
+
+test('notification is sent to new manager when manager changes during edit', function () {
+    Notification::fake();
+
+    $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
+    $oldOwner = User::factory()->create();
+    $newOwner = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach([$oldOwner->id, $newOwner->id], ['role' => TeamRole::Owner->value]);
+    $company = Company::factory()->create([
+        'category_id' => $category->id,
+        'team_id' => $team->id,
+        'manager_id' => $oldOwner->id,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(CompaniesPage::class)
+        ->callTableAction('edit', $company, [
+            'category_id' => $category->id,
+            'team_id' => $team->id,
+            'manager_id' => $newOwner->id,
+            'name' => $company->name,
+            'slug' => $company->slug,
+            'is_active' => true,
+        ])
+        ->assertHasNoFormErrors();
+
+    Notification::assertSentTo($newOwner, CompanyAssignedManager::class, function (CompanyAssignedManager $notification): bool {
+        return $notification->isNew === false;
+    });
+});
+
+test('no notification is sent when manager does not change during edit', function () {
+    Notification::fake();
+
+    $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    $company = Company::factory()->create([
+        'category_id' => $category->id,
+        'team_id' => $team->id,
+        'manager_id' => $owner->id,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(CompaniesPage::class)
+        ->callTableAction('edit', $company, [
+            'category_id' => $category->id,
+            'team_id' => $team->id,
+            'manager_id' => $owner->id,
+            'name' => 'Updated Name',
+            'slug' => 'updated-name',
+            'is_active' => true,
+        ])
+        ->assertHasNoFormErrors();
+
+    Notification::assertNotSentTo($owner, CompanyAssignedManager::class);
 });
 
 test('admin can delete a company from companies page', function () {

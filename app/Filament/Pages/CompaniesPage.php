@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Enums\TeamRole;
 use App\Models\Company;
 use App\Models\User;
+use App\Notifications\Companies\CompanyAssignedManager;
 use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -124,12 +125,30 @@ class CompaniesPage extends Page implements HasTable
                 EditAction::make()
                     ->label('Modifier')
                     ->schema($this->getCompanyFormSchema())
-                    ->modalWidth('4xl'),
+                    ->modalWidth('4xl')
+                    ->after(function (Company $record): void {
+                        if ($record->wasChanged('manager_id')) {
+                            $record->load('manager');
+                            $record->manager?->notify(new CompanyAssignedManager($record, isNew: false));
+                        }
+                    }),
                 DeleteAction::make()
                     ->label('Supprimer'),
             ])
             ->emptyStateHeading('Aucune entreprise')
             ->emptyStateDescription('Crée une entreprise partenaire et rattache-la à une catégorie.');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    protected function getCachedCompanyIds(): array
+    {
+        return Cache::remember('companies:ids', 3600, function () {
+            return Company::query()
+                ->pluck('id')
+                ->toArray();
+        });
     }
 
     /**
@@ -287,18 +306,6 @@ class CompaniesPage extends Page implements HasTable
         ];
     }
 
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedCompanyIds(): array
-    {
-        return Cache::remember('companies:ids', 3600, function () {
-            return Company::query()
-                ->pluck('id')
-                ->toArray();
-        });
-    }
-
     protected function getHeaderActions(): array
     {
         return [
@@ -307,7 +314,10 @@ class CompaniesPage extends Page implements HasTable
                 ->icon(Heroicon::OutlinedPlus)
                 ->model(Company::class)
                 ->schema($this->getCompanyFormSchema())
-                ->modalWidth('4xl'),
+                ->modalWidth('4xl')
+                ->after(function (Company $record): void {
+                    $record->manager->notify(new CompanyAssignedManager($record, isNew: true));
+                }),
         ];
     }
 }
