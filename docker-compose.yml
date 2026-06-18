@@ -124,60 +124,8 @@ services:
     depends_on:
       - redis
 
-  # --- Monitoring stack (Prometheus + Grafana) ---------------------------------
-
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus:/etc/prometheus
-      - prometheus-data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    depends_on:
-      - redis-exporter
-      - mysqld-exporter
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_INSTALL_PLUGINS: ""
-    volumes:
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-
-  redis-exporter:
-    image: oliver006/redis_exporter:latest
-    environment:
-      REDIS_ADDR: redis:6379
-    ports:
-      - "9121:9121"
-    depends_on:
-      - redis
-
-  mysqld-exporter:
-    image: prom/mysqld-exporter:latest
-    platform: linux/amd64
-    environment:
-      DATA_SOURCE_NAME: "${DB_USERNAME:-root}:${DB_PASSWORD:-secret}@tcp(mysql:3306)/${DB_DATABASE:-kleverkat}"
-    ports:
-      - "9104:9104"
-    depends_on:
-      - mysql
-
 volumes:
   db-data:
   redis-data:
   node_modules:
   framework-views:
-  prometheus-data:
-  grafana-data:
