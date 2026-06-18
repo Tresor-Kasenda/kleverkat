@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\Company;
-use App\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -22,12 +22,12 @@ class CompanyFactory extends Factory
         $name = fake()->unique()->company();
 
         return [
-            'sector_id' => Sector::factory(),
+            'category_id' => Category::factory(),
             'team_id' => null,
             'manager_id' => null,
             'name' => $name,
             'slug' => Str::slug($name),
-            'logo_path' => fake()->boolean(30) ? 'logos/' . Str::slug($name) . '.png' : null,
+            'logo_path' => fake()->boolean(30) ? 'logos/'.Str::slug($name).'.png' : null,
             'description' => fake()->paragraph(),
             'website_url' => fake()->url(),
             'support_email' => fake()->companyEmail(),

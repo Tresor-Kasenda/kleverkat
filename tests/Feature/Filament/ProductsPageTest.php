@@ -1,9 +1,9 @@
 <?php
 
 use App\Enums\ProductBillingFrequency;
-use App\Enums\ProductCategory;
 use App\Enums\ProductPriceType;
 use App\Filament\Pages\ProductsPage;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sector;
 use App\Models\User;
@@ -37,12 +37,11 @@ test('admin can create a product with all fields', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callTableAction('create', data: [
+        ->callAction('create', data: [
             'sector_id' => $sector->id,
             'code' => 'ASS-VIE-001',
             'name' => 'Assurance Vie Classique',
             'slug' => 'assurance-vie-classique',
-            'category' => ProductCategory::Vie->value,
             'short_description' => 'Couverture décès avec capital garanti.',
             'description' => 'Produit complet pour assurer votre famille.',
             'price_type' => ProductPriceType::Fixed->value,
@@ -88,7 +87,7 @@ test('admin can create a product with minimal fields', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callTableAction('create', data: [
+        ->callAction('create', data: [
             'sector_id' => $sector->id,
             'name' => 'Produit sur devis',
             'slug' => 'produit-sur-devis',
@@ -171,7 +170,6 @@ test('admin can view product detail modal', function () {
     $product = Product::factory()->create([
         'name' => 'Assurance Vie Premium',
         'code' => 'ASS-VIE-001',
-        'category' => ProductCategory::Vie->value,
         'price_type' => ProductPriceType::Fixed->value,
         'base_price' => 25.00,
         'currency' => 'USD',
@@ -203,7 +201,7 @@ test('product code must be unique', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callTableAction('create', data: [
+        ->callAction('create', data: [
             'sector_id' => $sector->id,
             'name' => 'Autre produit',
             'slug' => 'autre-produit',
@@ -215,4 +213,21 @@ test('product code must be unique', function () {
             'is_featured' => false,
         ])
         ->assertHasFormErrors(['code']);
+});
+
+test('admin can filter products by category through their sector', function () {
+    $admin = User::factory()->admin()->create();
+
+    $assurance = Category::factory()->create();
+    $energie = Category::factory()->create();
+    $autoProduct = Product::factory()->for(Sector::factory()->for($assurance))->create();
+    $elecProduct = Product::factory()->for(Sector::factory()->for($energie))->create();
+
+    $this->actingAs($admin);
+
+    Livewire::test(ProductsPage::class)
+        ->assertCanSeeTableRecords([$autoProduct, $elecProduct])
+        ->filterTable('category', $assurance->id)
+        ->assertCanSeeTableRecords([$autoProduct])
+        ->assertCanNotSeeTableRecords([$elecProduct]);
 });

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ProductBillingFrequency;
-use App\Enums\ProductCategory;
 use App\Enums\ProductPriceType;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'code',
     'name',
     'slug',
-    'category',
     'short_description',
     'description',
     'price_type',
@@ -58,7 +56,6 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'category' => ProductCategory::class,
             'price_type' => ProductPriceType::class,
             'billing_frequency' => ProductBillingFrequency::class,
             'base_price' => 'decimal:2',

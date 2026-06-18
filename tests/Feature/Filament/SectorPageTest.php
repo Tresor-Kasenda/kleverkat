@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Pages\SectorPage;
+use App\Models\Category;
 use App\Models\Sector;
 use App\Models\User;
 use Livewire\Livewire;
@@ -28,11 +29,13 @@ test('non admin can not access sector page', function () {
 
 test('admin can create a sector from sector page', function () {
     $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
 
     $this->actingAs($admin);
 
     Livewire::test(SectorPage::class)
-        ->callTableAction('create', data: [
+        ->callAction('create', data: [
+            'category_id' => $category->id,
             'name' => 'Assurances',
             'slug' => 'assurances',
             'description' => 'Tous les produits d assurance.',
@@ -42,10 +45,30 @@ test('admin can create a sector from sector page', function () {
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Sector::class, [
+        'category_id' => $category->id,
         'name' => 'Assurances',
         'slug' => 'assurances',
         'sort_order' => 1,
         'is_active' => true,
+    ]);
+});
+
+test('creating a sector without a category is rejected', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin);
+
+    Livewire::test(SectorPage::class)
+        ->callAction('create', data: [
+            'name' => 'Sans catégorie',
+            'slug' => 'sans-categorie',
+            'sort_order' => 1,
+            'is_active' => true,
+        ])
+        ->assertHasFormErrors(['category_id']);
+
+    $this->assertDatabaseMissing(Sector::class, [
+        'slug' => 'sans-categorie',
     ]);
 });
 
@@ -57,11 +80,13 @@ test('admin can edit a sector from sector page', function () {
         'sort_order' => 1,
         'is_active' => true,
     ]);
+    $newCategory = Category::factory()->create();
 
     $this->actingAs($admin);
 
     Livewire::test(SectorPage::class)
         ->callTableAction('edit', $sector, data: [
+            'category_id' => $newCategory->id,
             'name' => 'Assurances Auto',
             'slug' => 'assurances-auto',
             'description' => 'Produits d assurance auto.',
@@ -72,6 +97,7 @@ test('admin can edit a sector from sector page', function () {
 
     $this->assertDatabaseHas(Sector::class, [
         'id' => $sector->id,
+        'category_id' => $newCategory->id,
         'name' => 'Assurances Auto',
         'slug' => 'assurances-auto',
         'sort_order' => 3,

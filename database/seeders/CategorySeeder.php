@@ -9,36 +9,27 @@ use Illuminate\Support\Str;
 class CategorySeeder extends Seeder
 {
     /**
-     * High-level categories that group the sectors together. Inspired by standard
-     * industry-classification hierarchies (e.g. GICS sectors → industry groups),
-     * adapted to the Kleverkat catalogue.
+     * Top-level "universes" that group the sectors together, modelled on
+     * comparison platforms such as lesfurets (Assurance, Crédit, Énergie, Télécom).
      *
      * @var array<int, array{name: string, description: string}>
      */
     private array $categories = [
         [
-            'name' => 'Services financiers',
-            'description' => 'Assurances, banque, crédit, épargne et investissement.',
+            'name' => 'Assurance',
+            'description' => 'Comparez les assurances : auto, moto, habitation, santé, emprunteur et animaux.',
         ],
         [
-            'name' => 'Énergie & Industrie',
-            'description' => 'Énergie, mines, industrie, transport et logistique.',
+            'name' => 'Crédit & Banque',
+            'description' => 'Crédit immobilier, crédit à la consommation et rachat de crédit.',
         ],
         [
-            'name' => 'Technologies & Télécommunications',
-            'description' => 'Opérateurs télécoms, internet et services numériques.',
+            'name' => 'Énergie',
+            'description' => "Offres d'électricité et de gaz pour votre logement.",
         ],
         [
-            'name' => 'Santé & Bien-être',
-            'description' => 'Cliniques, hôpitaux, pharmacies et services médicaux.',
-        ],
-        [
-            'name' => 'Immobilier & Construction',
-            'description' => 'Promotion immobilière, BTP et gestion de patrimoine.',
-        ],
-        [
-            'name' => 'Commerce & Consommation',
-            'description' => 'Commerce de gros, de détail et biens de consommation.',
+            'name' => 'Télécom',
+            'description' => 'Box internet et forfaits mobiles.',
         ],
     ];
 

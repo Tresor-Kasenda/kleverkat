@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Sector;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -9,49 +10,97 @@ use Illuminate\Support\Str;
 class SectorSeeder extends Seeder
 {
     /**
-     * @var array<int, array{name: string, description: string}>
+     * Sectors are the comparison "verticals" within each universe, modelled on
+     * lesfurets (assurance auto, assurance santé, crédit conso, électricité…).
+     *
+     * @var array<int, array{name: string, category: string, description: string}>
      */
     private array $sectors = [
+        // --- Assurance ---
         [
-            'name' => 'Assurances',
-            'description' => 'Produits d\'assurance vie, santé, automobile et habitation.',
+            'name' => 'Assurance auto',
+            'category' => 'Assurance',
+            'description' => 'Comparez les formules au tiers, intermédiaires et tous risques.',
         ],
         [
-            'name' => 'Banque & Finance',
-            'description' => 'Services bancaires, crédit, épargne et investissement.',
+            'name' => 'Assurance moto & scooter',
+            'category' => 'Assurance',
+            'description' => 'Couverture deux-roues pour motos et scooters.',
         ],
         [
-            'name' => 'Télécommunications',
-            'description' => 'Opérateurs mobiles, internet et services de téléphonie.',
+            'name' => 'Assurance habitation',
+            'category' => 'Assurance',
+            'description' => 'Multirisque habitation (MRH) pour locataires et propriétaires.',
         ],
         [
-            'name' => 'Énergie & Mines',
-            'description' => 'Production et distribution d\'énergie, exploitation minière.',
+            'name' => 'Assurance santé (mutuelle)',
+            'category' => 'Assurance',
+            'description' => 'Complémentaires santé individuelles et familiales.',
         ],
         [
-            'name' => 'Santé',
-            'description' => 'Cliniques, hôpitaux, pharmacies et services médicaux.',
+            'name' => 'Assurance emprunteur',
+            'category' => 'Assurance',
+            'description' => 'Assurance de prêt pour sécuriser un crédit immobilier.',
         ],
         [
-            'name' => 'Immobilier',
-            'description' => 'Promotion immobilière, agences et gestion de patrimoine.',
+            'name' => 'Assurance animaux',
+            'category' => 'Assurance',
+            'description' => 'Frais vétérinaires pour chiens et chats.',
+        ],
+
+        // --- Crédit & Banque ---
+        [
+            'name' => 'Crédit immobilier',
+            'category' => 'Crédit & Banque',
+            'description' => 'Financement de l\'achat d\'un bien immobilier.',
         ],
         [
-            'name' => 'Transport & Logistique',
-            'description' => 'Fret, transport de passagers et gestion de la chaîne d\'approvisionnement.',
+            'name' => 'Crédit à la consommation',
+            'category' => 'Crédit & Banque',
+            'description' => 'Prêt personnel et crédit renouvelable.',
         ],
         [
-            'name' => 'Commerce & Distribution',
-            'description' => 'Commerce de gros, détail et distribution de biens de consommation.',
+            'name' => 'Rachat de crédit',
+            'category' => 'Crédit & Banque',
+            'description' => 'Regroupement de crédits pour alléger les mensualités.',
+        ],
+
+        // --- Énergie ---
+        [
+            'name' => 'Électricité',
+            'category' => 'Énergie',
+            'description' => 'Offres de fourniture d\'électricité.',
+        ],
+        [
+            'name' => 'Gaz',
+            'category' => 'Énergie',
+            'description' => 'Offres de fourniture de gaz naturel.',
+        ],
+
+        // --- Télécom ---
+        [
+            'name' => 'Box internet',
+            'category' => 'Télécom',
+            'description' => 'Offres internet fibre et ADSL.',
+        ],
+        [
+            'name' => 'Forfait mobile',
+            'category' => 'Télécom',
+            'description' => 'Forfaits mobiles avec ou sans engagement.',
         ],
     ];
 
     public function run(): void
     {
         foreach ($this->sectors as $index => $data) {
-            Sector::query()->firstOrCreate(
+            $categoryId = Category::query()
+                ->where('slug', Str::slug($data['category']))
+                ->value('id');
+
+            Sector::query()->updateOrCreate(
                 ['slug' => Str::slug($data['name'])],
                 [
+                    'category_id' => $categoryId,
                     'name' => $data['name'],
                     'description' => $data['description'],
                     'sort_order' => ($index + 1) * 10,

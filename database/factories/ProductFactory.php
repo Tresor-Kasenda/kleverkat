@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\ProductBillingFrequency;
-use App\Enums\ProductCategory;
 use App\Enums\ProductPriceType;
 use App\Models\Product;
 use App\Models\Sector;
@@ -25,7 +24,6 @@ class ProductFactory extends Factory
             'code' => strtoupper(Str::random(3)).'-'.fake()->numerify('###'),
             'name' => Str::title($name),
             'slug' => Str::slug($name),
-            'category' => fake()->randomElement(ProductCategory::cases()),
             'short_description' => fake()->sentence(),
             'description' => fake()->paragraph(),
             'price_type' => $priceType,

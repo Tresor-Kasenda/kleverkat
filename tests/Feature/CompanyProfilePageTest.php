@@ -1,8 +1,8 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\Category;
 use App\Models\Company;
-use App\Models\Sector;
 use App\Models\Team;
 use App\Models\User;
 use Livewire\Livewire;
@@ -14,7 +14,7 @@ test('company manager can access the company profile page', function () {
     $manager->switchTeam($team);
 
     Company::factory()->create([
-        'sector_id' => Sector::factory()->create()->id,
+        'category_id' => Category::factory()->create()->id,
         'team_id' => $team->id,
         'manager_id' => $manager->id,
         'name' => 'Sunu Assurances',
@@ -36,7 +36,7 @@ test('company manager can update missing company information', function () {
     $manager->switchTeam($team);
 
     $company = Company::factory()->create([
-        'sector_id' => Sector::factory()->create()->id,
+        'category_id' => Category::factory()->create()->id,
         'team_id' => $team->id,
         'manager_id' => $manager->id,
         'description' => null,
@@ -84,7 +84,7 @@ test('company members can view the page but cannot update it if they are not man
     $member->switchTeam($team);
 
     Company::factory()->create([
-        'sector_id' => Sector::factory()->create()->id,
+        'category_id' => Category::factory()->create()->id,
         'team_id' => $team->id,
         'manager_id' => $manager->id,
         'name' => 'Equity Banque',

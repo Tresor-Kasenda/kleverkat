@@ -10,46 +10,60 @@ use Illuminate\Support\Str;
 class ProductSeeder extends Seeder
 {
     /**
+     * Example offers within each sector (the comparable products), keyed by the
+     * sector slug. Inspired by the catalogues of comparison platforms.
+     *
      * @var array<string, array<int, array{name: string, short_description: string}>>
      */
     private array $productsBySector = [
-        'assurances' => [
-            ['name' => 'Assurance Vie Classique', 'short_description' => 'Couverture décès avec capital garanti pour les bénéficiaires.'],
-            ['name' => 'Assurance Santé Famille', 'short_description' => 'Prise en charge des frais médicaux pour toute la famille.'],
-            ['name' => 'Assurance Auto Tous Risques', 'short_description' => 'Protection complète du véhicule contre tous les sinistres.'],
-            ['name' => 'Assurance Habitation', 'short_description' => 'Couverture incendie, vol et dommages pour votre logement.'],
+        'assurance-auto' => [
+            ['name' => 'Auto au Tiers', 'short_description' => "Formule responsabilité civile, l'essentiel au meilleur prix."],
+            ['name' => 'Auto Tiers Étendu', 'short_description' => 'Vol, incendie et bris de glace en plus du tiers.'],
+            ['name' => 'Auto Tous Risques', 'short_description' => 'Protection complète du véhicule, y compris tous accidents.'],
         ],
-        'banque-finance' => [
-            ['name' => 'Compte Épargne Plus', 'short_description' => 'Compte rémunéré à taux attractif sans frais de gestion.'],
-            ['name' => 'Crédit Immobilier', 'short_description' => 'Financement de votre projet immobilier à taux compétitif.'],
-            ['name' => 'Compte Courant Business', 'short_description' => 'Compte professionnel avec carte Visa et services en ligne.'],
+        'assurance-moto-scooter' => [
+            ['name' => 'Moto au Tiers', 'short_description' => 'Responsabilité civile pour deux-roues.'],
+            ['name' => 'Moto Tous Risques', 'short_description' => 'Couverture complète moto et équipements.'],
         ],
-        'telecommunications' => [
-            ['name' => 'Forfait Mobile Pro', 'short_description' => 'Appels illimités, SMS et data haut débit pour professionnels.'],
-            ['name' => 'Internet Fibre Entreprise', 'short_description' => 'Connexion fibre optique dédiée avec SLA garanti.'],
-            ['name' => 'Solutions M-Banking', 'short_description' => 'Paiement mobile et transfert d\'argent via téléphone.'],
+        'assurance-habitation' => [
+            ['name' => 'MRH Essentielle', 'short_description' => 'Couverture incendie, dégâts des eaux et vol.'],
+            ['name' => 'MRH Confort', 'short_description' => 'Garanties étendues avec valeur à neuf et assistance.'],
         ],
-        'energie-mines' => [
-            ['name' => 'Électricité Industrielle', 'short_description' => 'Fourniture d\'énergie électrique pour sites industriels.'],
-            ['name' => 'Panneaux Solaires Résidentiels', 'short_description' => 'Installation et maintenance de systèmes solaires photovoltaïques.'],
+        'assurance-sante-mutuelle' => [
+            ['name' => 'Mutuelle Santé Solo', 'short_description' => 'Remboursement des soins courants pour une personne.'],
+            ['name' => 'Mutuelle Santé Famille', 'short_description' => 'Prise en charge renforcée pour toute la famille.'],
         ],
-        'sante' => [
-            ['name' => 'Consultation Spécialisée', 'short_description' => 'Accès à des médecins spécialistes toutes disciplines.'],
-            ['name' => 'Bilan de Santé Complet', 'short_description' => 'Bilan médical annuel avec analyses et imagerie incluses.'],
-            ['name' => 'Pharmacie en Ligne', 'short_description' => 'Commande et livraison de médicaments avec ordonnance.'],
+        'assurance-emprunteur' => [
+            ['name' => 'Assurance de Prêt Immobilier', 'short_description' => 'Garantie décès, invalidité et perte d\'emploi.'],
         ],
-        'immobilier' => [
-            ['name' => 'Location Bureaux Prestige', 'short_description' => 'Espaces de bureaux haut de gamme en centre-ville.'],
-            ['name' => 'Vente Appartements Neufs', 'short_description' => 'Appartements en résidence sécurisée avec parking.'],
+        'assurance-animaux' => [
+            ['name' => 'Formule Chien & Chat', 'short_description' => 'Remboursement des frais vétérinaires et vaccins.'],
         ],
-        'transport-logistique' => [
-            ['name' => 'Transport de Marchandises', 'short_description' => 'Fret routier national avec suivi GPS en temps réel.'],
-            ['name' => 'Logistique Entrepôt', 'short_description' => 'Stockage sécurisé et gestion de stocks pour entreprises.'],
-            ['name' => 'Coursier Express', 'short_description' => 'Livraison express de documents et colis en ville.'],
+        'credit-immobilier' => [
+            ['name' => 'Prêt Immobilier Taux Fixe', 'short_description' => 'Mensualités stables sur toute la durée du prêt.'],
+            ['name' => 'Prêt Immobilier Taux Variable', 'short_description' => 'Taux révisable indexé sur le marché.'],
         ],
-        'commerce-distribution' => [
-            ['name' => 'Distribution Alimentaire Gros', 'short_description' => 'Approvisionnement en produits alimentaires pour revendeurs.'],
-            ['name' => 'Produits d\'Entretien B2B', 'short_description' => 'Fournitures de nettoyage et hygiène pour entreprises.'],
+        'credit-a-la-consommation' => [
+            ['name' => 'Prêt Personnel', 'short_description' => 'Financement libre sans justificatif d\'utilisation.'],
+            ['name' => 'Crédit Renouvelable', 'short_description' => 'Réserve d\'argent disponible et reconstituable.'],
+        ],
+        'rachat-de-credit' => [
+            ['name' => 'Rachat de Crédits Conso', 'short_description' => 'Regroupez vos crédits en une seule mensualité réduite.'],
+        ],
+        'electricite' => [
+            ['name' => 'Électricité Verte', 'short_description' => "Électricité d'origine renouvelable à prix indexé."],
+            ['name' => 'Électricité Prix Fixe', 'short_description' => 'Prix du kWh bloqué pendant 1 à 3 ans.'],
+        ],
+        'gaz' => [
+            ['name' => 'Gaz Naturel Indexé', 'short_description' => 'Offre gaz indexée sur le prix repère.'],
+        ],
+        'box-internet' => [
+            ['name' => 'Box Fibre', 'short_description' => 'Très haut débit fibre avec téléphonie et TV.'],
+            ['name' => 'Box ADSL', 'short_description' => 'Internet ADSL pour les zones non fibrées.'],
+        ],
+        'forfait-mobile' => [
+            ['name' => 'Forfait 20 Go', 'short_description' => 'Appels illimités et 20 Go de data sans engagement.'],
+            ['name' => 'Forfait 100 Go', 'short_description' => 'Gros volume de data pour les usages intensifs.'],
         ],
     ];
 

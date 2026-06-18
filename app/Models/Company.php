@@ -7,10 +7,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Collection;
 
 #[Fillable([
-    'sector_id',
+    'category_id',
     'team_id',
     'manager_id',
     'name',
@@ -34,13 +33,13 @@ class Company extends Model
     use HasFactory;
 
     /**
-     * Get the sector that owns the company.
+     * Get the category that owns the company.
      *
-     * @return BelongsTo<Sector, $this>
+     * @return BelongsTo<Category, $this>
      */
-    public function sector(): BelongsTo
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Sector::class);
+        return $this->belongsTo(Category::class);
     }
 
     /**

@@ -52,6 +52,17 @@ docker compose exec app composer config http-basic.composer.fluxui.dev "$FLUX_US
 ```
 Credentials are needed in CI (`lint.yml`, `tests.yml`).
 
+## Monitoring (dev only)
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Prometheus | http://localhost:9090 | — |
+| Grafana | http://localhost:3000 | `admin` / `admin` |
+| Redis exporter | http://localhost:9121/metrics | — |
+| MySQL exporter | http://localhost:9104/metrics | — |
+
+Default dashboards are auto-provisioned in Grafana. Add panels for Redis hit rate, MySQL query time, etc.
+
 ## Quirks
 
 - If frontend changes aren't reflected, run `npm run build` or restart `docker compose exec app composer run dev`.

@@ -41,7 +41,7 @@ new class extends Component
         abort_if($team === null, 404);
 
         $company = $team->company()
-            ->with(['manager', 'sector', 'team'])
+            ->with(['manager', 'category', 'team'])
             ->first();
 
         abort_if($company === null, 404);
@@ -74,7 +74,7 @@ new class extends Component
             'country' => $validated['country'] ?: null,
         ]);
 
-        $this->company = $this->company->fresh(['manager', 'sector', 'team']);
+        $this->company = $this->company->fresh(['manager', 'category', 'team']);
 
         $this->fillForm();
 
@@ -181,8 +181,8 @@ new class extends Component
 
                     <dl class="mt-6 space-y-4">
                         <div class="space-y-1">
-                            <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500">Secteur</dt>
-                            <dd class="text-sm text-zinc-800 dark:text-zinc-200">{{ $company->sector->name }}</dd>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500">Catégorie</dt>
+                            <dd class="text-sm text-zinc-800 dark:text-zinc-200">{{ $company->category->name }}</dd>
                         </div>
 
                         <div class="space-y-1">

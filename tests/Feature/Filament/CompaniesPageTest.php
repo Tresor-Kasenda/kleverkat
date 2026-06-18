@@ -2,8 +2,8 @@
 
 use App\Enums\TeamRole;
 use App\Filament\Pages\CompaniesPage;
+use App\Models\Category;
 use App\Models\Company;
-use App\Models\Sector;
 use App\Models\Team;
 use App\Models\User;
 use Livewire\Livewire;
@@ -28,26 +28,20 @@ test('non admin can not access companies page', function () {
         ->assertForbidden();
 });
 
-test('admin can create a company from companies page', function () {
+test('admin can link a company to a category, a team and its owner', function () {
     $admin = User::factory()->admin()->create();
-    $manager = User::factory()->create();
-    $team = Team::factory()->create([
-        'name' => 'Allianz Team',
-        'slug' => 'allianz-team',
-    ]);
-    $sector = Sector::factory()->create([
-        'name' => 'Assurance',
-        'slug' => 'assurance',
-    ]);
-    $team->members()->attach($manager, ['role' => TeamRole::Member->value]);
+    $category = Category::factory()->create(['name' => 'Assurance', 'slug' => 'assurance']);
+    $owner = User::factory()->create();
+    $team = Team::factory()->create(['name' => 'Allianz Team', 'slug' => 'allianz-team']);
+    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
 
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
         ->callAction('create', data: [
-            'sector_id' => $sector->id,
+            'category_id' => $category->id,
             'team_id' => $team->id,
-            'manager_id' => $manager->id,
+            'manager_id' => $owner->id,
             'name' => 'Allianz Congo',
             'slug' => 'allianz-congo',
             'logo_path' => 'logos/allianz-congo.png',
@@ -66,9 +60,9 @@ test('admin can create a company from companies page', function () {
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Company::class, [
-        'sector_id' => $sector->id,
+        'category_id' => $category->id,
         'team_id' => $team->id,
-        'manager_id' => $manager->id,
+        'manager_id' => $owner->id,
         'name' => 'Allianz Congo',
         'slug' => 'allianz-congo',
         'support_email' => 'support@allianz.example.com',
@@ -77,20 +71,43 @@ test('admin can create a company from companies page', function () {
     ]);
 });
 
+test('the manager must be an owner of the selected team', function () {
+    $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
+    $member = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(CompaniesPage::class)
+        ->callAction('create', data: [
+            'category_id' => $category->id,
+            'team_id' => $team->id,
+            'manager_id' => $member->id,
+            'name' => 'Rawsur Congo',
+            'slug' => 'rawsur-congo',
+            'is_active' => true,
+        ])
+        ->assertHasFormErrors(['manager_id']);
+
+    $this->assertDatabaseMissing(Company::class, ['slug' => 'rawsur-congo']);
+});
+
 test('admin can edit a company from companies page', function () {
     $admin = User::factory()->admin()->create();
-    $initialSector = Sector::factory()->create();
-    $updatedSector = Sector::factory()->create();
-    $initialManager = User::factory()->create();
-    $updatedManager = User::factory()->create();
+    $initialCategory = Category::factory()->create();
+    $updatedCategory = Category::factory()->create();
+    $initialOwner = User::factory()->create();
+    $updatedOwner = User::factory()->create();
     $initialTeam = Team::factory()->create();
     $updatedTeam = Team::factory()->create();
-    $initialTeam->members()->attach($initialManager, ['role' => TeamRole::Member->value]);
-    $updatedTeam->members()->attach($updatedManager, ['role' => TeamRole::Admin->value]);
+    $initialTeam->members()->attach($initialOwner, ['role' => TeamRole::Owner->value]);
+    $updatedTeam->members()->attach($updatedOwner, ['role' => TeamRole::Owner->value]);
     $company = Company::factory()->create([
-        'sector_id' => $initialSector->id,
+        'category_id' => $initialCategory->id,
         'team_id' => $initialTeam->id,
-        'manager_id' => $initialManager->id,
+        'manager_id' => $initialOwner->id,
         'name' => 'Rawsur Test',
         'slug' => 'rawsur-test',
         'support_email' => 'contact@rawsur.test',
@@ -101,10 +118,10 @@ test('admin can edit a company from companies page', function () {
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callAction('edit', $company, [
-            'sector_id' => $updatedSector->id,
+        ->callTableAction('edit', $company, [
+            'category_id' => $updatedCategory->id,
             'team_id' => $updatedTeam->id,
-            'manager_id' => $updatedManager->id,
+            'manager_id' => $updatedOwner->id,
             'name' => 'Rawsur Premium',
             'slug' => 'rawsur-premium',
             'logo_path' => 'logos/rawsur-premium.png',
@@ -124,9 +141,9 @@ test('admin can edit a company from companies page', function () {
 
     $this->assertDatabaseHas(Company::class, [
         'id' => $company->id,
-        'sector_id' => $updatedSector->id,
+        'category_id' => $updatedCategory->id,
         'team_id' => $updatedTeam->id,
-        'manager_id' => $updatedManager->id,
+        'manager_id' => $updatedOwner->id,
         'name' => 'Rawsur Premium',
         'slug' => 'rawsur-premium',
         'support_email' => 'support@premium.rawsur.test',
@@ -142,7 +159,7 @@ test('admin can delete a company from companies page', function () {
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callAction('delete', $company);
+        ->callTableAction('delete', $company);
 
     $this->assertDatabaseMissing(Company::class, [
         'id' => $company->id,

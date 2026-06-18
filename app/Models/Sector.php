@@ -36,16 +36,6 @@ class Sector extends Model
     }
 
     /**
-     * Get the companies that belong to the sector.
-     *
-     * @return HasMany<Company, $this>
-     */
-    public function companies(): HasMany
-    {
-        return $this->hasMany(Company::class);
-    }
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
