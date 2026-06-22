@@ -7,9 +7,6 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         if (User::query()->where('email', 'admin@example.com')->doesntExist()) {
@@ -23,6 +20,8 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SectorSeeder::class,
             ProductSeeder::class,
+            QuestionnaireSeeder::class,
+            CompanyOfferSeeder::class,
         ]);
     }
 }

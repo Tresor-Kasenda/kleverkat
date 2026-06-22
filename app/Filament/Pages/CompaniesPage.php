@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Actions\Companies\CreateCompanyWithManager;
 use App\Enums\TeamRole;
 use App\Models\Company;
 use App\Models\User;
@@ -135,8 +136,54 @@ class CompaniesPage extends Page implements HasTable
     }
 
     /**
-     * Company form schema shared by the create and edit actions: a company is
-     * linked to a category, a partner team and the team owner (its manager).
+     * Schema for the CREATE action: a new User (manager) is provisioned on the fly.
+     *
+     * @return array<int, Component>
+     */
+    protected function getCompanyCreateSchema(): array
+    {
+        return [
+            Section::make('Gestionnaire')
+                ->icon(Heroicon::OutlinedUser)
+                ->columns(2)
+                ->schema([
+                    TextInput::make('manager_name')
+                        ->label('Nom du gestionnaire')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('manager_email')
+                        ->label('Email du gestionnaire')
+                        ->email()
+                        ->required()
+                        ->maxLength(255)
+                        ->unique(table: 'users', column: 'email')
+                        ->helperText('Un mot de passe temporaire lui sera envoyé par email.'),
+                ]),
+            Section::make('Rattachement')
+                ->icon(Heroicon::OutlinedRectangleStack)
+                ->columns(2)
+                ->schema([
+                    Select::make('category_id')
+                        ->label('Secteur d\'activité')
+                        ->relationship('category', 'name')
+                        ->required()
+                        ->searchable()
+                        ->preload(),
+                    Select::make('team_id')
+                        ->label('Équipe partenaire')
+                        ->relationship('team', 'name', fn (Builder $query) => $query->where('is_personal', false))
+                        ->required()
+                        ->searchable()
+                        ->preload()
+                        ->unique(Company::class, 'team_id', ignoreRecord: true)
+                        ->helperText('Une équipe ne peut être liée qu\'à une seule entreprise.'),
+                ]),
+            ...$this->getProfileSections(),
+        ];
+    }
+
+    /**
+     * Schema for the EDIT action: manager is reassigned from existing team owners.
      *
      * @return array<int, Component>
      */
@@ -162,9 +209,9 @@ class CompaniesPage extends Page implements HasTable
                         ->unique(Company::class, 'team_id', ignoreRecord: true)
                         ->live()
                         ->afterStateUpdated(fn (Set $set): null => $set('manager_id', null))
-                        ->helperText('Une équipe ne peut être liée qu’à une seule entreprise.'),
+                        ->helperText('Une équipe ne peut être liée qu\'à une seule entreprise.'),
                     Select::make('manager_id')
-                        ->label('Gestionnaire (propriétaire de l’équipe)')
+                        ->label('Gestionnaire (propriétaire de l\'équipe)')
                         ->options(fn (Get $get): array => $this->getTeamOwnerOptions($get('team_id')))
                         ->searchable()
                         ->preload()
@@ -173,7 +220,7 @@ class CompaniesPage extends Page implements HasTable
                         ->rule(fn (Get $get) => Rule::exists('team_members', 'user_id')
                             ->where('team_id', $get('team_id') ?? 0)
                             ->where('role', TeamRole::Owner->value))
-                        ->helperText('Le gestionnaire est le propriétaire (Owner) de l’équipe partenaire.')
+                        ->helperText('Le gestionnaire est le propriétaire (Owner) de l\'équipe partenaire.')
                         ->columnSpanFull(),
                 ]),
             ...$this->getProfileSections(),
@@ -296,11 +343,9 @@ class CompaniesPage extends Page implements HasTable
                 ->label('Créer une entreprise')
                 ->icon(Heroicon::OutlinedPlus)
                 ->model(Company::class)
-                ->schema($this->getCompanyFormSchema())
+                ->schema($this->getCompanyCreateSchema())
                 ->modalWidth('4xl')
-                ->after(function (Company $record): void {
-                    $record->manager->notify(new CompanyAssignedManager($record, isNew: true));
-                }),
+                ->using(fn (array $data): Company => app(CreateCompanyWithManager::class)->handle($data)),
         ];
     }
 }

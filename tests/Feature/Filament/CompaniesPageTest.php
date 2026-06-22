@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Team;
 use App\Models\User;
 use App\Notifications\Companies\CompanyAssignedManager;
+use App\Notifications\Companies\CompanyManagerCredentials;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -30,21 +31,22 @@ test('non admin can not access companies page', function () {
         ->assertForbidden();
 });
 
-test('admin can link a company to a category, a team and its owner', function () {
+test('admin can create a company and provision a new manager account', function () {
+    Notification::fake();
+
     $admin = User::factory()->admin()->create();
     $category = Category::factory()->create(['name' => 'Assurance', 'slug' => 'assurance']);
-    $owner = User::factory()->create();
     $team = Team::factory()->create(['name' => 'Allianz Team', 'slug' => 'allianz-team']);
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
 
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
         ->call('mountAction', 'create')
         ->set([
+            'mountedActions.0.data.manager_name' => 'Claire Mukendi',
+            'mountedActions.0.data.manager_email' => 'claire.mukendi@allianz.example.com',
             'mountedActions.0.data.category_id' => $category->id,
             'mountedActions.0.data.team_id' => $team->id,
-            'mountedActions.0.data.manager_id' => $owner->id,
             'mountedActions.0.data.name' => 'Allianz Congo',
             'mountedActions.0.data.slug' => 'allianz-congo',
             'mountedActions.0.data.logo_path' => 'logos/allianz-congo.png',
@@ -52,7 +54,7 @@ test('admin can link a company to a category, a team and its owner', function ()
             'mountedActions.0.data.website_url' => 'https://allianz.example.com',
             'mountedActions.0.data.support_email' => 'support@allianz.example.com',
             'mountedActions.0.data.support_phone' => '+243 970 000 000',
-            'mountedActions.0.data.contact_name' => 'Claire Mukendi',
+            'mountedActions.0.data.contact_name' => 'Service commercial',
             'mountedActions.0.data.address_line_1' => '10 avenue de la Paix',
             'mountedActions.0.data.address_line_2' => 'Immeuble A',
             'mountedActions.0.data.city' => 'Lubumbashi',
@@ -63,41 +65,52 @@ test('admin can link a company to a category, a team and its owner', function ()
         ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
+    $manager = User::where('email', 'claire.mukendi@allianz.example.com')->firstOrFail();
+
     $this->assertDatabaseHas(Company::class, [
         'category_id' => $category->id,
         'team_id' => $team->id,
-        'manager_id' => $owner->id,
+        'manager_id' => $manager->id,
         'name' => 'Allianz Congo',
         'slug' => 'allianz-congo',
         'support_email' => 'support@allianz.example.com',
-        'contact_name' => 'Claire Mukendi',
         'is_active' => true,
     ]);
+
+    $this->assertDatabaseHas('team_members', [
+        'team_id' => $team->id,
+        'user_id' => $manager->id,
+        'role' => TeamRole::Owner->value,
+    ]);
+
+    Notification::assertSentTo($manager, CompanyManagerCredentials::class,
+        fn (CompanyManagerCredentials $n): bool => $n->temporaryPassword !== '' && $n->company->name === 'Allianz Congo'
+    );
 });
 
-test('the manager must be an owner of the selected team', function () {
+test('manager email must be unique when creating a company', function () {
     $admin = User::factory()->admin()->create();
+    $existingUser = User::factory()->create(['email' => 'already@taken.com']);
     $category = Category::factory()->create();
-    $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
 
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
         ->call('mountAction', 'create')
         ->set([
+            'mountedActions.0.data.manager_name' => 'Jean Dupont',
+            'mountedActions.0.data.manager_email' => 'already@taken.com',
             'mountedActions.0.data.category_id' => $category->id,
             'mountedActions.0.data.team_id' => $team->id,
-            'mountedActions.0.data.manager_id' => $member->id,
-            'mountedActions.0.data.name' => 'Rawsur Congo',
-            'mountedActions.0.data.slug' => 'rawsur-congo',
+            'mountedActions.0.data.name' => 'Test Corp',
+            'mountedActions.0.data.slug' => 'test-corp',
             'mountedActions.0.data.is_active' => true,
         ])
         ->call('callMountedAction')
-        ->assertHasFormErrors(['manager_id']);
+        ->assertHasFormErrors(['manager_email']);
 
-    $this->assertDatabaseMissing(Company::class, ['slug' => 'rawsur-congo']);
+    $this->assertDatabaseMissing(Company::class, ['slug' => 'test-corp']);
 });
 
 test('admin can edit a company from companies page', function () {
@@ -160,34 +173,16 @@ test('admin can edit a company from companies page', function () {
     ]);
 });
 
-test('notification is sent to manager when company is created', function () {
-    Notification::fake();
+test('CompanyManagerCredentials notification contains the temporary password and the company name', function () {
+    $company = Company::factory()->create(['name' => 'AXA Congo']);
+    $manager = User::factory()->create();
+    $notification = new CompanyManagerCredentials($company, 'S3cr3tPass!');
 
-    $admin = User::factory()->admin()->create();
-    $category = Category::factory()->create();
-    $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    $mail = $notification->toMail($manager);
 
-    $this->actingAs($admin);
-
-    Livewire::test(CompaniesPage::class)
-        ->call('mountAction', 'create')
-        ->set([
-            'mountedActions.0.data.category_id' => $category->id,
-            'mountedActions.0.data.team_id' => $team->id,
-            'mountedActions.0.data.manager_id' => $owner->id,
-            'mountedActions.0.data.name' => 'Allianz Congo',
-            'mountedActions.0.data.slug' => 'allianz-congo',
-            'mountedActions.0.data.is_active' => true,
-        ])
-        ->call('callMountedAction')
-        ->assertHasNoFormErrors();
-
-    Notification::assertSentTo($owner, CompanyAssignedManager::class, function (CompanyAssignedManager $notification): bool {
-        return $notification->isNew === true
-            && $notification->company->name === 'Allianz Congo';
-    });
+    expect($mail->subject)->toContain('AXA Congo')
+        ->and(implode(' ', $mail->introLines))->toContain('S3cr3tPass!')
+        ->and($mail->actionUrl)->toBe(route('login'));
 });
 
 test('notification is sent to new manager when manager changes during edit', function () {
