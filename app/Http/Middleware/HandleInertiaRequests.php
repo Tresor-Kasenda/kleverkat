@@ -38,10 +38,33 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function shareOnce(Request $request): array
+    {
+        return [
+            ...parent::shareOnce($request),
             'navCategories' => fn () => Category::query()
                 ->where('is_active', true)
+                ->with([
+                    'sectors' => fn ($query) => $query
+                        ->select(['id', 'category_id', 'name', 'slug', 'description', 'sort_order'])
+                        ->where('is_active', true)
+                        ->with([
+                            'products' => fn ($query) => $query
+                                ->select(['id', 'sector_id', 'name', 'slug', 'short_description', 'sort_order'])
+                                ->where('is_active', true)
+                                ->orderBy('sort_order')
+                                ->limit(7),
+                        ])
+                        ->orderBy('sort_order'),
+                ])
                 ->orderBy('sort_order')
-                ->get(['id', 'name', 'slug']),
+                ->get(['id', 'name', 'slug', 'description']),
         ];
     }
 }
