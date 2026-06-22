@@ -8,7 +8,6 @@ use App\Enums\TeamRole;
 use App\Models\Company;
 use App\Models\User;
 use App\Notifications\Companies\CompanyAssignedManager;
-use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -32,7 +31,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use UnitEnum;
@@ -47,11 +45,9 @@ class CompaniesPage extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Entreprises';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
+    protected static string|UnitEnum|null $navigationGroup = 'Partenaires';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
-
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
     {
@@ -71,7 +67,6 @@ class CompaniesPage extends Page implements HasTable
         return $table
             ->query(
                 Company::query()
-                    ->whereIn('id', $this->getCachedCompanyIds())
                     ->with(['category', 'team', 'manager'])
                     ->orderBy('name')
             )
@@ -137,18 +132,6 @@ class CompaniesPage extends Page implements HasTable
             ])
             ->emptyStateHeading('Aucune entreprise')
             ->emptyStateDescription('Crée une entreprise partenaire et rattache-la à une catégorie.');
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedCompanyIds(): array
-    {
-        return Cache::remember('companies:ids', 3600, function () {
-            return Company::query()
-                ->pluck('id')
-                ->toArray();
-        });
     }
 
     /**

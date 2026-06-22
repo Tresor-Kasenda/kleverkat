@@ -15,7 +15,7 @@ class SectorFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array<model-property<Sector>, mixed>
      */
     public function definition(): array
     {

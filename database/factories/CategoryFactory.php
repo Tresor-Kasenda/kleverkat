@@ -14,7 +14,7 @@ class CategoryFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array<model-property<Category>, mixed>
      */
     public function definition(): array
     {

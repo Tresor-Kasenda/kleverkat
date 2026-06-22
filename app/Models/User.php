@@ -24,6 +24,7 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use HasTeams;
     use Notifiable;
     use PasskeyAuthenticatable;
@@ -37,7 +38,7 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 

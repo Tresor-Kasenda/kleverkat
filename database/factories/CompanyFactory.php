@@ -15,7 +15,7 @@ class CompanyFactory extends Factory
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array<model-property<Company>, mixed>
      */
     public function definition(): array
     {
@@ -31,10 +31,10 @@ class CompanyFactory extends Factory
             'description' => fake()->paragraph(),
             'website_url' => fake()->url(),
             'support_email' => fake()->companyEmail(),
-            'support_phone' => fake()->phoneNumber(),
+            'support_phone' => fake()->numerify('+243 ### ### ###'),
             'contact_name' => fake()->name(),
             'address_line_1' => fake()->streetAddress(),
-            'address_line_2' => fake()->boolean(35) ? fake()->secondaryAddress() : null,
+            'address_line_2' => fake()->boolean(35) ? fake()->streetAddress() : null,
             'city' => fake()->city(),
             'postal_code' => fake()->postcode(),
             'country' => fake()->country(),

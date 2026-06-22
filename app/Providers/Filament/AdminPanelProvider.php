@@ -9,10 +9,12 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -45,6 +47,17 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+            ->navigationGroups([
+                NavigationGroup::make('Catalogue')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->collapsible(),
+                NavigationGroup::make('Partenaires')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->collapsible(),
+                NavigationGroup::make('Offres')
+                    ->icon(Heroicon::OutlinedTag)
+                    ->collapsible(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -58,7 +71,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugin(
                 AuthDesignerPlugin::make()
-                    ->login(fn(AuthPageConfig $config) => $config
+                    ->login(fn (AuthPageConfig $config) => $config
                         ->media(asset('assets/background.jpg'))
                         ->mediaPosition(MediaPosition::Right)
                         ->blur(8)

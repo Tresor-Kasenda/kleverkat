@@ -8,13 +8,12 @@ use App\Enums\ProductBillingFrequency;
 use App\Enums\ProductPriceType;
 use App\Models\Category;
 use App\Models\Product;
-use BackedEnum;
+use App\Models\Sector;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -43,7 +42,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -58,8 +56,6 @@ class ProductsPage extends Page implements HasTable
     protected static ?string $navigationLabel = 'Produits';
 
     protected static string|null|UnitEnum $navigationGroup = 'Catalogue';
-
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-cube';
 
     protected static ?int $navigationSort = 2;
 
@@ -78,7 +74,6 @@ class ProductsPage extends Page implements HasTable
         return $table
             ->query(
                 Product::query()
-                    ->whereIn('id', $this->getCachedProductIds())
                     ->with('sector.category')
                     ->orderBy('sort_order')
                     ->orderBy('name'),
@@ -337,7 +332,7 @@ class ProductsPage extends Page implements HasTable
     }
 
     /**
-     * @return array<int, Field>
+     * @return array<int, Component>
      */
     protected function getProductFormSchema(): array
     {
@@ -347,9 +342,32 @@ class ProductsPage extends Page implements HasTable
                     Tab::make('Général')
                         ->icon('heroicon-o-information-circle')
                         ->schema([
+                            Select::make('category_id')
+                                ->label('Catégorie')
+                                ->options(Category::query()->orderBy('name')->pluck('name', 'id'))
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(fn (Set $set) => $set('sector_id', null))
+                                ->dehydrated(false)
+                                ->afterStateHydrated(function (Set $set, ?Product $record) {
+                                    if ($record?->sector) {
+                                        $set('category_id', $record->sector->category_id);
+                                    }
+                                }),
                             Select::make('sector_id')
                                 ->label('Secteur')
-                                ->relationship('sector', 'name')
+                                ->options(function (Get $get) {
+                                    $categoryId = $get('category_id');
+
+                                    if (! $categoryId) {
+                                        return [];
+                                    }
+
+                                    return Sector::query()
+                                        ->where('category_id', $categoryId)
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id');
+                                })
                                 ->required()
                                 ->searchable()
                                 ->preload()
@@ -517,18 +535,6 @@ class ProductsPage extends Page implements HasTable
                 ])
                 ->columnSpanFull(),
         ];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedProductIds(): array
-    {
-        return Cache::remember('products:ids', 3600, function () {
-            return Product::query()
-                ->pluck('id')
-                ->toArray();
-        });
     }
 
     protected function getHeaderActions(): array

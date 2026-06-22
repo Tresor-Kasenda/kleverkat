@@ -109,12 +109,6 @@ parameters:
 			path: app/Http/Responses/TwoFactorLoginResponse.php
 
 		-
-			message: '#^Method App\\Livewire\\Actions\\Logout\:\:__invoke\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Livewire/Actions/Logout.php
-
-		-
 			message: '#^Method App\\Models\\Membership\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\Membership\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\Membership\)\>\.$#'
 			identifier: return.type
 			count: 1

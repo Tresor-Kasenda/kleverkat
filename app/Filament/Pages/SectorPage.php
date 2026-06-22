@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Sector;
-use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -19,14 +18,12 @@ use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -37,8 +34,6 @@ class SectorPage extends Page implements HasTable
     protected static ?string $title = 'Gestion des secteurs';
 
     protected static string|null|UnitEnum $navigationGroup = 'Catalogue';
-
-    protected static string|null|BackedEnum $navigationIcon = Heroicon::OutlinedHeart;
 
     protected static ?int $navigationSort = 1;
 
@@ -62,7 +57,6 @@ class SectorPage extends Page implements HasTable
         return $table
             ->query(
                 Sector::query()
-                    ->whereIn('id', $this->getCachedSectorIds())
                     ->with('category')
                     ->withCount('products')
                     ->orderBy('sort_order')
@@ -160,18 +154,6 @@ class SectorPage extends Page implements HasTable
                 ->label('Actif')
                 ->default(true),
         ];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedSectorIds(): array
-    {
-        return Cache::remember('sectors:ids', 3600, function () {
-            return Sector::query()
-                ->pluck('id')
-                ->toArray();
-        });
     }
 
     protected function getHeaderActions(): array

@@ -1,10 +1,13 @@
 <?php
 
+use App\Actions\Teams\CreateTeamWithMembers;
 use App\Enums\TeamRole;
 use App\Filament\Pages\TeamsPage;
 use App\Models\Team;
 use App\Models\User;
 use App\Notifications\Teams\TeamMemberCredentials;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -28,30 +31,25 @@ test('non admin can not access teams page', function () {
         ->assertForbidden();
 });
 
-test('admin can create a team and provision its members', function () {
+test('create team action provisions member accounts and notifies them', function () {
     Notification::fake();
 
-    $admin = User::factory()->admin()->create();
+    $team = app(CreateTeamWithMembers::class)->handle([
+        'name' => 'Allianz Team',
+        'slug' => 'allianz-team',
+        'members' => [
+            ['name' => 'Claire Mukendi', 'email' => 'claire@allianz.example.com', 'role' => TeamRole::Owner->value, 'password' => 'Password123!'],
+            ['name' => 'Paul Ilunga', 'email' => 'paul@allianz.example.com', 'role' => TeamRole::Member->value, 'password' => 'Secret456!'],
+        ],
+    ]);
 
-    $this->actingAs($admin);
-
-    Livewire::test(TeamsPage::class)
-        ->callAction('create', data: [
-            'name' => 'Allianz Team',
-            'slug' => 'allianz-team',
-            'members' => [
-                ['name' => 'Claire Mukendi', 'email' => 'claire@allianz.example.com', 'role' => TeamRole::Owner->value],
-                ['name' => 'Paul Ilunga', 'email' => 'paul@allianz.example.com', 'role' => TeamRole::Member->value],
-            ],
-        ])
-        ->assertHasNoFormErrors();
-
+    expect($team->is_personal)->toBeFalse();
     $this->assertDatabaseHas('teams', [
+        'id' => $team->id,
         'slug' => 'allianz-team',
         'is_personal' => false,
     ]);
 
-    $team = Team::query()->where('slug', 'allianz-team')->firstOrFail();
     $owner = User::query()->where('email', 'claire@allianz.example.com')->firstOrFail();
     $member = User::query()->where('email', 'paul@allianz.example.com')->firstOrFail();
 
@@ -67,27 +65,26 @@ test('admin can create a team and provision its members', function () {
     ]);
 
     expect($owner->fresh()->current_team_id)->toBe($team->id);
+    expect(Hash::check('Password123!', $owner->fresh()->password))->toBeTrue();
 
     Notification::assertSentTo($owner, TeamMemberCredentials::class);
     Notification::assertSentTo($member, TeamMemberCredentials::class);
 });
 
-test('creating a team rejects an already used member email', function () {
+test('create team action rolls back when a member email is already used', function () {
     Notification::fake();
 
-    $admin = User::factory()->admin()->create();
     User::factory()->create(['email' => 'taken@allianz.example.com']);
 
-    $this->actingAs($admin);
+    $call = fn () => app(CreateTeamWithMembers::class)->handle([
+        'name' => 'Allianz Team',
+        'slug' => 'allianz-team',
+        'members' => [
+            ['name' => 'Claire Mukendi', 'email' => 'taken@allianz.example.com', 'role' => TeamRole::Owner->value, 'password' => 'Password123!'],
+        ],
+    ]);
 
-    Livewire::test(TeamsPage::class)
-        ->callAction('create', data: [
-            'name' => 'Allianz Team',
-            'slug' => 'allianz-team',
-            'members' => [
-                ['name' => 'Claire Mukendi', 'email' => 'taken@allianz.example.com', 'role' => TeamRole::Owner->value],
-            ],
-        ]);
+    expect($call)->toThrow(QueryException::class);
 
     $this->assertDatabaseMissing('teams', ['slug' => 'allianz-team']);
     Notification::assertNothingSent();

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'category_id',
@@ -63,8 +64,13 @@ class Company extends Model
     }
 
     /**
-     * Determine whether the given user is the assigned manager.
+     * @return HasMany<Offer, $this>
      */
+    public function offers(): HasMany
+    {
+        return $this->hasMany(Offer::class);
+    }
+
     public function isManagedBy(User $user): bool
     {
         return $this->manager_id === $user->id;

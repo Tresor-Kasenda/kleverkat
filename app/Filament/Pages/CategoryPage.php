@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Category;
-use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -26,7 +25,6 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -37,8 +35,6 @@ class CategoryPage extends Page implements HasTable
     protected static ?string $title = 'Gestion des catégories';
 
     protected static string|null|UnitEnum $navigationGroup = 'Catalogue';
-
-    protected static string|null|BackedEnum $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?int $navigationSort = 0;
 
@@ -62,7 +58,6 @@ class CategoryPage extends Page implements HasTable
         return $table
             ->query(
                 Category::query()
-                    ->whereIn('id', $this->getCachedCategoryIds())
                     ->withCount('sectors')
                     ->orderBy('sort_order')
                     ->orderBy('name')
@@ -151,18 +146,6 @@ class CategoryPage extends Page implements HasTable
                 ->label('Actif')
                 ->default(true),
         ];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedCategoryIds(): array
-    {
-        return Cache::remember('categories:ids', 3600, function () {
-            return Category::query()
-                ->pluck('id')
-                ->toArray();
-        });
     }
 
     protected function getHeaderActions(): array

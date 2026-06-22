@@ -7,7 +7,7 @@ namespace App\Filament\Pages;
 use App\Actions\Teams\CreateTeamWithMembers;
 use App\Enums\TeamRole;
 use App\Models\Team;
-use BackedEnum;
+use App\Models\User;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -26,7 +26,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -40,11 +39,9 @@ class TeamsPage extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Équipes';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
+    protected static string|UnitEnum|null $navigationGroup = 'Partenaires';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
-
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 0;
 
     public static function canAccess(): bool
     {
@@ -64,7 +61,7 @@ class TeamsPage extends Page implements HasTable
         return $table
             ->query(
                 Team::query()
-                    ->whereIn('id', $this->getCachedTeamIds())
+                    ->where('is_personal', false)
                     ->withCount('members')
                     ->with('company')
                     ->orderBy('name')
@@ -78,7 +75,13 @@ class TeamsPage extends Page implements HasTable
                     ->sortable(),
                 TextColumn::make('owner')
                     ->label('Propriétaire')
-                    ->state(fn (Team $record): ?string => $record->owner()?->name)
+                    ->state(fn (Team $record): ?string => User::query()
+                        ->whereHas('teamMemberships', fn ($query) => $query
+                            ->where('team_id', $record->id)
+                            ->where('role', TeamRole::Owner->value))
+                        ->orderBy('name')
+                        ->first(['name'])
+                        ?->name)
                     ->placeholder('Non désigné'),
                 TextColumn::make('members_count')
                     ->label('Membres')
@@ -147,19 +150,6 @@ class TeamsPage extends Page implements HasTable
                         ->unique(Team::class, 'slug', ignoreRecord: true),
                 ]),
         ];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    protected function getCachedTeamIds(): array
-    {
-        return Cache::remember('teams:ids', 3600, function () {
-            return Team::query()
-                ->where('is_personal', false)
-                ->pluck('id')
-                ->toArray();
-        });
     }
 
     protected function getHeaderActions(): array

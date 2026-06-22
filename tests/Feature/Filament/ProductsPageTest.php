@@ -38,6 +38,7 @@ test('admin can create a product with all fields', function () {
 
     Livewire::test(ProductsPage::class)
         ->callAction('create', data: [
+            'category_id' => $sector->category_id,
             'sector_id' => $sector->id,
             'code' => 'ASS-VIE-001',
             'name' => 'Assurance Vie Classique',
@@ -88,6 +89,7 @@ test('admin can create a product with minimal fields', function () {
 
     Livewire::test(ProductsPage::class)
         ->callAction('create', data: [
+            'category_id' => $sector->category_id,
             'sector_id' => $sector->id,
             'name' => 'Produit sur devis',
             'slug' => 'produit-sur-devis',
@@ -123,6 +125,7 @@ test('admin can edit a product', function () {
 
     Livewire::test(ProductsPage::class)
         ->callTableAction('edit', $product, data: [
+            'category_id' => $sector->category_id,
             'sector_id' => $sector->id,
             'name' => 'Produit Mis À Jour',
             'slug' => 'produit-mis-a-jour',
@@ -202,6 +205,7 @@ test('product code must be unique', function () {
 
     Livewire::test(ProductsPage::class)
         ->callAction('create', data: [
+            'category_id' => $sector->category_id,
             'sector_id' => $sector->id,
             'name' => 'Autre produit',
             'slug' => 'autre-produit',

@@ -1,3 +1,4 @@
+/database/testing.sqlite
 /.phpunit.cache
 /node_modules
 /public/build

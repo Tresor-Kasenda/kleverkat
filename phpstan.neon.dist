@@ -17,3 +17,10 @@ parameters:
     checkModelProperties: true
     checkUnusedViews: false
     checkMissingTranslations: false
+
+    ignoreErrors:
+        # Pest test closures: $this is bound to TestCase at runtime,
+        # but PHPStan sees Pest\PendingCalls\TestCall.
+        - '#Call to an undefined method Pest\\PendingCalls\\TestCall::#'
+        # Filament macros on TestResponse (assertCanSeeTableRecords, assertHasNoErrors, etc.)
+        - '#Call to an undefined method Illuminate\\Testing\\TestResponse::#'
