@@ -5,7 +5,6 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Team;
 use App\Models\User;
-use Livewire\Livewire;
 
 test('company manager can access the company profile page', function () {
     $manager = User::factory()->create();
@@ -20,13 +19,10 @@ test('company manager can access the company profile page', function () {
         'name' => 'Sunu Assurances',
     ]);
 
-    $response = $this
-        ->actingAs($manager)
-        ->get(route('company.profile', ['current_team' => $team->slug]));
-
-    $response
+    $this->actingAs($manager)
+        ->get(route('company.profile', ['current_team' => $team->slug]))
         ->assertOk()
-        ->assertSee('Sunu Assurances');
+        ->assertInertia(fn ($page) => $page->component('Companies/Profile'));
 });
 
 test('company manager can update missing company information', function () {
@@ -49,20 +45,19 @@ test('company manager can update missing company information', function () {
         'country' => null,
     ]);
 
-    $this->actingAs($manager);
-
-    Livewire::test('pages::companies.profile')
-        ->set('description', 'Assureur spécialisé pour le marché local.')
-        ->set('websiteUrl', 'https://sunu.example.com')
-        ->set('supportEmail', 'support@sunu.example.com')
-        ->set('supportPhone', '+243 810 000 000')
-        ->set('contactName', 'Nadine Mwamba')
-        ->set('addressLine1', '15 avenue Lumumba')
-        ->set('city', 'Lubumbashi')
-        ->set('postalCode', '7001')
-        ->set('country', 'RDC')
-        ->call('save')
-        ->assertHasNoErrors();
+    $this->actingAs($manager)
+        ->put(route('company.profile.update', ['current_team' => $team->slug]), [
+            'description' => 'Assureur spécialisé pour le marché local.',
+            'website_url' => 'https://sunu.example.com',
+            'support_email' => 'support@sunu.example.com',
+            'support_phone' => '+243 810 000 000',
+            'contact_name' => 'Nadine Mwamba',
+            'address_line_1' => '15 avenue Lumumba',
+            'city' => 'Lubumbashi',
+            'postal_code' => '7001',
+            'country' => 'RDC',
+        ])
+        ->assertRedirect();
 
     $this->assertDatabaseHas(Company::class, [
         'id' => $company->id,
@@ -94,11 +89,10 @@ test('company members can view the page but cannot update it if they are not man
         ->get(route('company.profile', ['current_team' => $team->slug]))
         ->assertOk();
 
-    $this->actingAs($member);
-
-    Livewire::test('pages::companies.profile')
-        ->set('supportEmail', 'member@equity.example.com')
-        ->call('save')
+    $this->actingAs($member)
+        ->put(route('company.profile.update', ['current_team' => $team->slug]), [
+            'support_email' => 'member@equity.example.com',
+        ])
         ->assertForbidden();
 });
 
@@ -108,9 +102,7 @@ test('company profile page returns 404 when the current team has no linked compa
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
     $user->switchTeam($team);
 
-    $response = $this
-        ->actingAs($user)
-        ->get(route('company.profile', ['current_team' => $team->slug]));
-
-    $response->assertNotFound();
+    $this->actingAs($user)
+        ->get(route('company.profile', ['current_team' => $team->slug]))
+        ->assertNotFound();
 });

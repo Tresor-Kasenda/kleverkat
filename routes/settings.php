@@ -3,8 +3,14 @@
 use App\Http\Controllers\Settings\AppearanceController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Teams\TeamsCancelInvitationController;
+use App\Http\Controllers\Teams\TeamsDeleteController;
 use App\Http\Controllers\Teams\TeamsEditController;
 use App\Http\Controllers\Teams\TeamsIndexController;
+use App\Http\Controllers\Teams\TeamsInviteController;
+use App\Http\Controllers\Teams\TeamsRemoveMemberController;
+use App\Http\Controllers\Teams\TeamsStoreController;
+use App\Http\Controllers\Teams\TeamsUpdateMemberController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -33,12 +39,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ),
     )->name('security.edit');
 
-    Route::put('settings/security/password', [SecurityController::class, 'updatePassword'])->name('password.update');
+    Route::put('settings/security/password', [SecurityController::class, 'updatePassword'])->name('security.password.update');
 
     Route::get('settings/teams', TeamsIndexController::class)->name('teams.index');
+    Route::post('settings/teams', TeamsStoreController::class)->name('teams.store');
 
     Route::middleware(EnsureTeamMembership::class)->group(function () {
         Route::get('settings/teams/{team}', [TeamsEditController::class, 'show'])->name('teams.edit');
         Route::put('settings/teams/{team}', [TeamsEditController::class, 'update'])->name('teams.update');
+        Route::delete('settings/teams/{team}', TeamsDeleteController::class)->name('teams.delete');
+        Route::post('settings/teams/{team}/invite', TeamsInviteController::class)->name('teams.invite');
+        Route::delete('settings/teams/{team}/invitations/{invitation}', TeamsCancelInvitationController::class)->name('teams.invitations.cancel');
+        Route::put('settings/teams/{team}/members/{userId}', TeamsUpdateMemberController::class)->name('teams.members.update');
+        Route::delete('settings/teams/{team}/members/{userId}', TeamsRemoveMemberController::class)->name('teams.members.remove');
     });
 });

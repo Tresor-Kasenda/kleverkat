@@ -3,27 +3,21 @@
 use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
-use Livewire\Livewire;
 
 test('teams index page can be rendered', function () {
     $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
-        ->get(route('teams.index'));
-
-    $response->assertOk();
+    $this->actingAs($user)
+        ->get(route('teams.index'))
+        ->assertOk();
 });
 
 test('teams can be created', function () {
     $user = User::factory()->create();
 
-    $this->actingAs($user);
-
-    Livewire::test('pages::teams.index')
-        ->set('name', 'Test Team')
-        ->call('createTeam')
-        ->assertHasNoErrors();
+    $this->actingAs($user)
+        ->post(route('teams.store'), ['name' => 'Test Team'])
+        ->assertRedirect();
 
     $this->assertDatabaseHas('teams', [
         'name' => 'Test Team',
@@ -38,12 +32,9 @@ test('team slug uses next available suffix', function () {
     Team::factory()->create(['name' => 'Acme One', 'slug' => 'acme-1']);
     Team::factory()->create(['name' => 'Acme Ten', 'slug' => 'acme-10']);
 
-    $this->actingAs($user);
-
-    Livewire::test('pages::teams.index')
-        ->set('name', 'Acme')
-        ->call('createTeam')
-        ->assertHasNoErrors();
+    $this->actingAs($user)
+        ->post(route('teams.store'), ['name' => 'Acme'])
+        ->assertRedirect();
 
     $this->assertDatabaseHas('teams', [
         'name' => 'Acme',
@@ -56,25 +47,19 @@ test('team edit page can be rendered', function () {
     $team = Team::factory()->create();
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-    $response = $this
-        ->actingAs($user)
-        ->get(route('teams.edit', $team));
-
-    $response->assertOk();
+    $this->actingAs($user)
+        ->get(route('teams.edit', $team))
+        ->assertOk();
 });
 
 test('teams can be updated by owners', function () {
     $user = User::factory()->create();
     $team = Team::factory()->create(['name' => 'Original Name']);
-
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-    $this->actingAs($user);
-
-    Livewire::test('pages::teams.edit', ['team' => $team])
-        ->set('teamName', 'Updated Name')
-        ->call('updateTeam')
-        ->assertHasNoErrors();
+    $this->actingAs($user)
+        ->put(route('teams.update', $team), ['name' => 'Updated Name'])
+        ->assertRedirect();
 
     $this->assertDatabaseHas('teams', [
         'id' => $team->id,
@@ -90,44 +75,31 @@ test('teams cannot be updated by members', function () {
     $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
     $team->members()->attach($member, ['role' => TeamRole::Member->value]);
 
-    $this->actingAs($member);
-
-    Livewire::test('pages::teams.edit', ['team' => $team])
-        ->set('teamName', 'Updated Name')
-        ->call('updateTeam')
+    $this->actingAs($member)
+        ->put(route('teams.update', $team), ['name' => 'Updated Name'])
         ->assertForbidden();
 });
 
 test('teams can be deleted by owners', function () {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $team), ['name' => $team->name])
+        ->assertRedirect();
 
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', $team->name)
-        ->call('deleteTeam')
-        ->assertHasNoErrors();
-
-    $this->assertSoftDeleted('teams', [
-        'id' => $team->id,
-    ]);
+    $this->assertSoftDeleted('teams', ['id' => $team->id]);
 });
 
 test('team deletion requires name confirmation', function () {
     $user = User::factory()->create();
     $team = Team::factory()->create();
-
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-    $this->actingAs($user);
-
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', 'Wrong Name')
-        ->call('deleteTeam')
-        ->assertHasErrors(['deleteName']);
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $team), ['name' => 'Wrong Name'])
+        ->assertSessionHasErrors('name');
 
     $this->assertDatabaseHas('teams', [
         'id' => $team->id,
@@ -139,27 +111,20 @@ test('deleting current team switches to alphabetically first remaining team', fu
     $user = User::factory()->create(['name' => 'Mike']);
 
     $zuluTeam = Team::factory()->create(['name' => 'Zulu Team']);
-    $zuluTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
-
     $alphaTeam = Team::factory()->create(['name' => 'Alpha Team']);
-    $alphaTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
-
     $betaTeam = Team::factory()->create(['name' => 'Beta Team']);
+
+    $zuluTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
+    $alphaTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
     $betaTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
     $user->update(['current_team_id' => $zuluTeam->id]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $zuluTeam), ['name' => $zuluTeam->name])
+        ->assertRedirect();
 
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $zuluTeam])
-        ->set('deleteName', $zuluTeam->name)
-        ->call('deleteTeam')
-        ->assertHasNoErrors();
-
-    $this->assertSoftDeleted('teams', [
-        'id' => $zuluTeam->id,
-    ]);
-
+    $this->assertSoftDeleted('teams', ['id' => $zuluTeam->id]);
     expect($user->fresh()->current_team_id)->toEqual($alphaTeam->id);
 });
 
@@ -171,17 +136,11 @@ test('deleting current team falls back to personal team when alphabetically firs
 
     $user->update(['current_team_id' => $team->id]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $team), ['name' => $team->name])
+        ->assertRedirect();
 
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', $team->name)
-        ->call('deleteTeam')
-        ->assertHasNoErrors();
-
-    $this->assertSoftDeleted('teams', [
-        'id' => $team->id,
-    ]);
-
+    $this->assertSoftDeleted('teams', ['id' => $team->id]);
     expect($user->fresh()->current_team_id)->toEqual($personalTeam->id);
 });
 
@@ -193,51 +152,38 @@ test('deleting non current team leaves current team unchanged', function () {
 
     $user->update(['current_team_id' => $personalTeam->id]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $team), ['name' => $team->name])
+        ->assertRedirect();
 
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', $team->name)
-        ->call('deleteTeam')
-        ->assertHasNoErrors();
-
-    $this->assertSoftDeleted('teams', [
-        'id' => $team->id,
-    ]);
-
+    $this->assertSoftDeleted('teams', ['id' => $team->id]);
     expect($user->fresh()->current_team_id)->toEqual($personalTeam->id);
 });
 
 test('deleting team switches other affected users to their personal team', function () {
     $owner = User::factory()->create();
     $member = User::factory()->create();
-
     $team = Team::factory()->create();
+
     $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
     $team->members()->attach($member, ['role' => TeamRole::Member->value]);
 
     $owner->update(['current_team_id' => $team->id]);
     $member->update(['current_team_id' => $team->id]);
 
-    $this->actingAs($owner);
-
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', $team->name)
-        ->call('deleteTeam')
-        ->assertHasNoErrors();
+    $this->actingAs($owner)
+        ->delete(route('teams.delete', $team), ['name' => $team->name])
+        ->assertRedirect();
 
     expect($member->fresh()->current_team_id)->toEqual($member->personalTeam()->id);
 });
 
 test('personal teams cannot be deleted', function () {
     $user = User::factory()->create();
-
     $personalTeam = $user->personalTeam();
 
-    $this->actingAs($user);
-
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $personalTeam])
-        ->set('deleteName', $personalTeam->name)
-        ->call('deleteTeam')
+    $this->actingAs($user)
+        ->delete(route('teams.delete', $personalTeam), ['name' => $personalTeam->name])
         ->assertForbidden();
 
     $this->assertDatabaseHas('teams', [
@@ -254,16 +200,12 @@ test('teams cannot be deleted by non owners', function () {
     $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
     $team->members()->attach($member, ['role' => TeamRole::Member->value]);
 
-    $this->actingAs($member);
-
-    Livewire::test('pages::teams.delete-team-modal', ['team' => $team])
-        ->set('deleteName', $team->name)
-        ->call('deleteTeam')
+    $this->actingAs($member)
+        ->delete(route('teams.delete', $team), ['name' => $team->name])
         ->assertForbidden();
 });
 
 test('guests cannot access teams', function () {
-    $response = $this->get(route('teams.index'));
-
-    $response->assertRedirect(route('login'));
+    $this->get(route('teams.index'))
+        ->assertRedirect(route('login'));
 });

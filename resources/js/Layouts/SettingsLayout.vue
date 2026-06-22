@@ -1,34 +1,34 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const page = usePage();
-const auth = computed(() => page.props.auth);
 
 const navItems = [
-    { label: 'Profil',       route: 'profile.edit' },
-    { label: 'Apparence',    route: 'appearance.edit' },
-    { label: 'Sécurité',     route: 'security.edit' },
-    { label: 'Équipes',      route: 'teams.index' },
+    { label: 'Profil',     route: 'profile.edit',    path: '/profile' },
+    { label: 'Apparence',  route: 'appearance.edit',  path: '/appearance' },
+    { label: 'Sécurité',   route: 'security.edit',    path: '/security' },
+    { label: 'Équipes',    route: 'teams.index',       path: '/teams' },
 ];
+
+function isActive(path) {
+    return page.url.startsWith(path);
+}
 </script>
 
 <template>
     <AppLayout>
         <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
             <div class="flex flex-col gap-8 md:flex-row">
-                <!-- Sidebar nav -->
-                <aside class="shrink-0 md:w-48">
-                    <nav class="space-y-1">
+                <!-- Sidebar -->
+                <aside class="shrink-0 md:w-52">
+                    <nav class="space-y-0.5">
                         <Link
                             v-for="item in navItems"
                             :key="item.route"
                             :href="route(item.route)"
-                            class="block rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-                            :class="$page.url.startsWith('/' + item.route.replace('.edit', '').replace('.index', ''))
-                                ? 'bg-zinc-100 text-zinc-900'
-                                : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                            class="sidebar-nav-item text-sm"
+                            :class="isActive(item.path) ? 'active' : ''"
                         >
                             {{ item.label }}
                         </Link>
@@ -36,7 +36,7 @@ const navItems = [
                 </aside>
 
                 <!-- Content -->
-                <main class="flex-1 min-w-0">
+                <main class="min-w-0 flex-1">
                     <slot />
                 </main>
             </div>

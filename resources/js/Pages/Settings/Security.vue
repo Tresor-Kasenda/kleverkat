@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 function updatePassword() {
-    form.put(route('password.update'), {
+    form.put(route('security.password.update'), {
         onFinish: () => form.reset('current_password', 'password', 'password_confirmation'),
     });
 }

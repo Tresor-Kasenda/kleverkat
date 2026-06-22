@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teams;
 
+use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use App\Rules\TeamName;
@@ -19,19 +20,19 @@ class TeamsEditController extends Controller
         $team->load(['members', 'invitations' => fn ($q) => $q->where('accepted_at', null)]);
 
         return Inertia::render('Teams/Edit', [
-            'team'    => $this->serializeTeam($team),
+            'team' => $this->serializeTeam($team),
             'members' => $team->members->map(fn ($member) => [
-                'id'     => $member->id,
-                'name'   => $member->name,
-                'email'  => $member->email,
-                'role'   => $member->pivot->role,
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->pivot->role,
             ])->values(),
             'invitations' => $team->invitations->map(fn ($inv) => [
-                'id'    => $inv->id,
+                'id' => $inv->id,
                 'email' => $inv->email,
-                'role'  => $inv->role,
+                'role' => $inv->role,
             ])->values(),
-            'availableRoles' => \App\Enums\TeamRole::cases()->map(fn ($r) => [
+            'availableRoles' => collect(TeamRole::cases())->map(fn ($r) => [
                 'value' => $r->value,
                 'label' => $r->label(),
             ])->all(),
@@ -59,9 +60,9 @@ class TeamsEditController extends Controller
     private function serializeTeam(Team $team): array
     {
         return [
-            'id'          => $team->id,
-            'name'        => $team->name,
-            'slug'        => $team->slug,
+            'id' => $team->id,
+            'name' => $team->name,
+            'slug' => $team->slug,
             'is_personal' => $team->is_personal,
         ];
     }

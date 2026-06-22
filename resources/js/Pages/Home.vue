@@ -80,6 +80,7 @@ const iconPaths = [
                 :key="cat.id"
                 :href="route('compare.sectors', cat.slug)"
                 class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-blue-600"
+                view-transition
             >
                 {{ cat.name }}
                 <svg class="size-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2"

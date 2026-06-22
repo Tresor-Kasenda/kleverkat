@@ -12,7 +12,7 @@ use App\Models\Product;
 use App\Models\Question;
 use App\Models\Questionnaire;
 use App\Models\Sector;
-use Livewire\Livewire;
+use App\Models\User;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -51,11 +51,14 @@ test('compare categories page lists active categories', function () {
     $active = Category::factory()->create(['is_active' => true, 'slug' => 'active-cat']);
     $inactive = Category::factory()->create(['is_active' => false, 'slug' => 'inactive-cat']);
 
-    $this->get(route('compare.categories'))->assertSuccessful();
-
-    Livewire::test('pages::compare.category-list')
-        ->assertSee($active->name)
-        ->assertDontSee($inactive->name);
+    $this->get(route('compare.categories'))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('Compare/CategoryList')
+            ->has('categories')
+            ->where('categories', fn ($cats) => $cats->contains('slug', $active->slug)
+                && ! $cats->contains('slug', $inactive->slug))
+        );
 });
 
 test('compare categories page is accessible without authentication', function () {
@@ -69,9 +72,13 @@ test('sector list shows sectors for a category', function () {
     $sector = Sector::factory()->for($category)->create(['is_active' => true]);
     $hidden = Sector::factory()->for($category)->create(['is_active' => false]);
 
-    Livewire::test('pages::compare.sector-list', ['category' => $category])
-        ->assertSee($sector->name)
-        ->assertDontSee($hidden->name);
+    $this->get(route('compare.sectors', $category->slug))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Compare/SectorList')
+            ->where('sectors', fn ($sectors) => $sectors->contains('id', $sector->id)
+                && ! $sectors->contains('id', $hidden->id))
+        );
 });
 
 test('sector list returns 404 for inactive category', function () {
@@ -88,9 +95,13 @@ test('product list shows active products for a sector', function () {
     $active = Product::factory()->for($sector)->create(['is_active' => true]);
     $inactive = Product::factory()->for($sector)->create(['is_active' => false]);
 
-    Livewire::test('pages::compare.product-list', ['category' => $category, 'sector' => $sector])
-        ->assertSee($active->name)
-        ->assertDontSee($inactive->name);
+    $this->get(route('compare.products', [$category->slug, $sector->slug]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Compare/ProductList')
+            ->where('products', fn ($products) => $products->contains('id', $active->id)
+                && ! $products->contains('id', $inactive->id))
+        );
 });
 
 test('product list returns 404 if sector does not belong to category', function () {
@@ -113,65 +124,21 @@ describe('Wizard — questionnaire multi-étapes', function () {
         $this->questionnaire = $d['questionnaire'];
     });
 
-    it('affiche la première étape du questionnaire', function () {
-        Livewire::test('pages::compare.wizard', [
-            'category' => $this->category,
-            'sector' => $this->sector,
-            'product' => $this->product,
-        ])
-            ->assertSet('stepIndex', 0)
-            ->assertSee('Destination');
-    });
-
-    it('passe à l\'étape suivante avec nextStep()', function () {
-        Livewire::test('pages::compare.wizard', [
-            'category' => $this->category,
-            'sector' => $this->sector,
-            'product' => $this->product,
-        ])
-            ->set('answers.destination', 'europe')
-            ->set('answers.duree', '14')
-            ->call('nextStep')
-            ->assertSet('stepIndex', 1)
-            ->assertSee('Nom complet');
-    });
-
-    it('retourne à l\'étape précédente avec previousStep()', function () {
-        Livewire::test('pages::compare.wizard', [
-            'category' => $this->category,
-            'sector' => $this->sector,
-            'product' => $this->product,
-        ])
-            ->set('answers.destination', 'europe')
-            ->set('answers.duree', '14')
-            ->call('nextStep')
-            ->assertSet('stepIndex', 1)
-            ->call('previousStep')
-            ->assertSet('stepIndex', 0);
-    });
-
-    it('valide les champs requis avant de passer à l\'étape suivante', function () {
-        Livewire::test('pages::compare.wizard', [
-            'category' => $this->category,
-            'sector' => $this->sector,
-            'product' => $this->product,
-        ])
-            ->call('nextStep')
-            ->assertHasErrors(['answers.destination', 'answers.duree']);
+    it('affiche le questionnaire avec les étapes', function () {
+        $this->get(route('compare.wizard', [$this->category->slug, $this->sector->slug, $this->product->slug]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Compare/Wizard')
+                ->has('steps')
+                ->has('stepKeys')
+                ->where('product.slug', $this->product->slug)
+            );
     });
 
     it('crée une ComparisonSession et redirige vers les résultats à la soumission finale', function () {
-        Livewire::test('pages::compare.wizard', [
-            'category' => $this->category,
-            'sector' => $this->sector,
-            'product' => $this->product,
-        ])
-            ->set('answers.destination', 'europe')
-            ->set('answers.duree', '14')
-            ->call('nextStep')  // move to step 2 (identite)
-            ->set('answers.nom', 'Marie Dupont')
-            ->call('nextStep')  // submit
-            ->assertRedirectContains('/comparer/resultats/');
+        $this->post(route('compare.wizard.store', [$this->category->slug, $this->sector->slug, $this->product->slug]), [
+            'answers' => ['destination' => 'europe', 'duree' => '14', 'nom' => 'Marie Dupont'],
+        ])->assertRedirectContains('/comparer/resultats/');
 
         $session = ComparisonSession::where('product_id', $this->product->id)->firstOrFail();
         expect($session->answers_json['destination'])->toBe('europe')
@@ -207,7 +174,6 @@ describe('Results — affichage et creation de lead', function () {
             'completed_at' => now(),
         ]);
 
-        // Create pre-computed results
         $this->result1 = ComparisonResult::factory()->for($this->session, 'session')->for($this->offer1)->create([
             'company_id' => $this->offer1->company_id,
             'is_eligible' => true,
@@ -223,11 +189,14 @@ describe('Results — affichage et creation de lead', function () {
     });
 
     it('affiche les résultats classés du moins cher au plus cher', function () {
-        $component = Livewire::test('pages::compare.results', ['session' => $this->session]);
-
-        $component->assertSee('Chapka')
-            ->assertSee('13')
-            ->assertSee('AXA Travel');
+        $this->get(route('compare.results', $this->session))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Compare/Results')
+                ->has('results', 2)
+                ->where('results.0.offer.company.name', 'Chapka')
+                ->where('results.1.offer.company.name', 'AXA Travel')
+            );
     });
 
     it('retourne 404 pour une session non complétée', function () {
@@ -241,16 +210,19 @@ describe('Results — affichage et creation de lead', function () {
         $this->get(route('compare.results', $incomplete->id))->assertNotFound();
     });
 
-    it('ouvre le modal de contact et crée un lead', function () {
-        Livewire::test('pages::compare.results', ['session' => $this->session])
-            ->call('openModal', $this->result2->id, LeadActionType::QuoteRequest->value)
-            ->assertSet('showModal', true)
-            ->set('firstName', 'Jean')
-            ->set('lastName', 'Dupont')
-            ->set('email', 'jean.dupont@example.com')
-            ->set('phone', '0612345678')
-            ->call('submitLead')
-            ->assertSet('leadSent', true);
+    it('crée un lead via l\'API JSON', function () {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('compare.leads.create', $this->result2), [
+                'first_name' => 'Jean',
+                'last_name' => 'Dupont',
+                'email' => 'jean.dupont@example.com',
+                'phone' => '0612345678',
+                'action_type' => LeadActionType::QuoteRequest->value,
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
 
         $lead = Lead::where('comparison_result_id', $this->result2->id)->first();
         expect($lead)->not->toBeNull()
@@ -259,18 +231,11 @@ describe('Results — affichage et creation de lead', function () {
     });
 
     it('valide les champs obligatoires du formulaire de contact', function () {
-        Livewire::test('pages::compare.results', ['session' => $this->session])
-            ->call('openModal', $this->result2->id, LeadActionType::Callback->value)
-            ->call('submitLead')
-            ->assertHasErrors(['firstName', 'lastName', 'email']);
-    });
+        $user = User::factory()->create();
 
-    it('ferme le modal et réinitialise le formulaire', function () {
-        Livewire::test('pages::compare.results', ['session' => $this->session])
-            ->call('openModal', $this->result2->id, LeadActionType::QuoteRequest->value)
-            ->set('firstName', 'Jean')
-            ->call('closeModal')
-            ->assertSet('showModal', false)
-            ->assertSet('firstName', '');
+        $this->actingAs($user)
+            ->postJson(route('compare.leads.create', $this->result2), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'action_type']);
     });
 });

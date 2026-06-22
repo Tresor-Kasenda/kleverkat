@@ -22,22 +22,22 @@ class ResultsController extends Controller
         $session->load('product.sector.category');
 
         $results = $service->rankedByPrice($session)->map(fn ($r) => [
-            'id'    => $r->id,
+            'id' => $r->id,
             'score' => $r->score,
             'price' => $r->calculated_price,
             'offer' => [
-                'id'                => $r->offer->id,
-                'name'              => $r->offer->name,
+                'id' => $r->offer->id,
+                'name' => $r->offer->name,
                 'short_description' => $r->offer->short_description,
-                'price_note'        => $r->offer->price_note,
-                'is_featured'       => $r->offer->is_featured,
-                'features'          => $r->offer->features->map(fn ($f) => [
-                    'label'        => $f->label,
-                    'value'        => $f->value,
+                'price_note' => $r->offer->price_note,
+                'is_featured' => $r->offer->is_featured,
+                'features' => $r->offer->features->map(fn ($f) => [
+                    'label' => $f->label,
+                    'value' => $f->value,
                     'is_highlight' => $f->is_highlight,
                 ])->all(),
                 'company' => [
-                    'name'        => $r->offer->company->name,
+                    'name' => $r->offer->company->name,
                     'website_url' => $r->offer->company->website_url,
                 ],
             ],
@@ -45,7 +45,7 @@ class ResultsController extends Controller
 
         return Inertia::render('Compare/Results', [
             'session' => [
-                'id'      => $session->id,
+                'id' => $session->id,
                 'product' => [
                     'name' => $session->product->name,
                     'sector' => [
@@ -64,20 +64,20 @@ class ResultsController extends Controller
     public function createLead(Request $request, ComparisonResult $result, CreateLead $action): JsonResponse
     {
         $data = $request->validate([
-            'first_name'  => ['required', 'string', 'max:255'],
-            'last_name'   => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', 'max:255'],
-            'phone'       => ['nullable', 'string', 'max:30'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'action_type' => ['required', 'string', 'in:quote_request,callback,partner_redirect'],
         ]);
 
         $actionType = LeadActionType::from($data['action_type']);
 
         $action->handle($result, [
-            'contact_first_name' => $data['first_name'],
-            'contact_last_name'  => $data['last_name'],
-            'contact_email'      => $data['email'],
-            'contact_phone'      => $data['phone'] ?? null,
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
         ], $actionType);
 
         return response()->json(['success' => true]);
