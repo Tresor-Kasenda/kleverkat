@@ -1,29 +1,40 @@
 <?php
 
+use App\Http\Controllers\Compare\CategoryListController;
+use App\Http\Controllers\Compare\ProductListController;
+use App\Http\Controllers\Compare\ResultsController;
+use App\Http\Controllers\Compare\SectorListController;
+use App\Http\Controllers\Compare\WizardController;
+use App\Http\Controllers\Companies\CompanyProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Teams\AcceptInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
-Route::livewire('/', 'pages::home')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Public comparison flow
 Route::prefix('comparer')->name('compare.')->group(function () {
-    // Results must be declared before {category:slug} to avoid routing collision
-    Route::livewire('/', 'pages::compare.category-list')->name('categories');
-    Route::livewire('/resultats/{session}', 'pages::compare.results')->name('results');
-    Route::livewire('/{category:slug}', 'pages::compare.sector-list')->name('sectors');
-    Route::livewire('/{category:slug}/{sector:slug}', 'pages::compare.product-list')->name('products');
-    Route::livewire('/{category:slug}/{sector:slug}/{product:slug}', 'pages::compare.wizard')->name('wizard');
+    Route::get('/', CategoryListController::class)->name('categories');
+    Route::get('/{category:slug}', SectorListController::class)->name('sectors');
+    Route::get('/{category:slug}/{sector:slug}', ProductListController::class)->name('products');
+    Route::get('/{category:slug}/{sector:slug}/{product:slug}', [WizardController::class, 'show'])->name('wizard');
+    Route::post('/{category:slug}/{sector:slug}/{product:slug}', [WizardController::class, 'store'])->name('wizard.store');
+    Route::get('/resultats/{session}', [ResultsController::class, 'show'])->name('results');
+    Route::post('/leads/{result}', [ResultsController::class, 'createLead'])->name('leads.create')->middleware('auth');
 });
 
 Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
-        Route::view('dashboard', 'dashboard')->name('dashboard');
-        Route::livewire('company/profile', 'pages::companies.profile')->name('company.profile');
+        Route::get('dashboard', DashboardController::class)->name('dashboard');
+        Route::get('company/profile', [CompanyProfileController::class, 'show'])->name('company.profile');
+        Route::put('company/profile', [CompanyProfileController::class, 'update'])->name('company.profile.update');
     });
 
 Route::middleware(['auth'])->group(function () {
-    Route::livewire('invitations/{invitation}/accept', 'pages::teams.accept-invitation')->name('invitations.accept');
+    Route::get('invitations/{invitation}/accept', AcceptInvitationController::class)->name('invitations.accept');
 });
 
 require __DIR__.'/settings.php';

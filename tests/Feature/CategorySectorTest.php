@@ -25,6 +25,6 @@ test('seeders attach every sector to a category', function () {
     $this->seed(SectorSeeder::class);
 
     expect(Category::query()->count())->toBe(4)
-        ->and(Sector::query()->count())->toBe(13)
+        ->and(Sector::query()->count())->toBe(40)
         ->and(Sector::query()->whereNull('category_id')->count())->toBe(0);
 });

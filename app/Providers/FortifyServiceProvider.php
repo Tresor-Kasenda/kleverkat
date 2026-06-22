@@ -56,13 +56,16 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn () => view('pages::auth.login'));
-        Fortify::verifyEmailView(fn () => view('pages::auth.verify-email'));
-        Fortify::twoFactorChallengeView(fn () => view('pages::auth.two-factor-challenge'));
-        Fortify::confirmPasswordView(fn () => view('pages::auth.confirm-password'));
-        Fortify::registerView(fn () => view('pages::auth.register'));
-        Fortify::resetPasswordView(fn () => view('pages::auth.reset-password'));
-        Fortify::requestPasswordResetLinkView(fn () => view('pages::auth.forgot-password'));
+        Fortify::loginView(fn () => inertia('Auth/Login'));
+        Fortify::verifyEmailView(fn () => inertia('Auth/VerifyEmail'));
+        Fortify::twoFactorChallengeView(fn () => inertia('Auth/TwoFactorChallenge'));
+        Fortify::confirmPasswordView(fn () => inertia('Auth/ConfirmPassword'));
+        Fortify::registerView(fn () => inertia('Auth/Register'));
+        Fortify::resetPasswordView(fn ($request) => inertia('Auth/ResetPassword', [
+            'token' => $request->route('token'),
+            'email' => $request->query('email', ''),
+        ]));
+        Fortify::requestPasswordResetLinkView(fn () => inertia('Auth/ForgotPassword'));
     }
 
     /**
