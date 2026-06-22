@@ -1,6 +1,9 @@
 <script setup>
 import {Link, usePage} from '@inertiajs/vue3';
-import {ArrowRight, ChevronDown, ChevronRight, CircleHelp, Layers3} from 'lucide-vue-next';
+import {ArrowRight, ChevronDown, ChevronRight, CircleHelp, Layers3, Moon, Sun} from 'lucide-vue-next';
+import {useTheme} from '@/composables/useTheme';
+
+const {isDark, toggle} = useTheme();
 import {computed, nextTick, onBeforeUnmount, ref} from 'vue';
 
 const page = usePage();
@@ -204,8 +207,19 @@ onBeforeUnmount(cancelMenuClose);
                         </div>
                     </nav>
 
-                    <!-- Right: language + auth CTA -->
+                    <!-- Right: theme toggle + language + auth CTA -->
                     <div class="flex shrink-0 items-center gap-2.5">
+                        <!-- Theme toggle -->
+                        <button
+                            :aria-label="isDark ? 'Activer le mode clair' : 'Activer le mode sombre'"
+                            class="flex size-9 items-center justify-center rounded-lg text-fg-subtext transition-colors hover:bg-bg-high hover:text-fg-title"
+                            type="button"
+                            @click="toggle"
+                        >
+                            <Sun v-if="isDark" class="size-4.5" stroke-width="1.8"/>
+                            <Moon v-else class="size-4.5" stroke-width="1.8"/>
+                        </button>
+
                         <!-- Language selector -->
                         <button
                             class="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-fg-subtext transition-colors hover:bg-bg-high hover:text-fg-title sm:flex"

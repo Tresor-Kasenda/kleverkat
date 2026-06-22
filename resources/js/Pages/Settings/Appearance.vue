@@ -1,22 +1,9 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
 import SettingsLayout from '@/Layouts/SettingsLayout.vue';
+import { useTheme } from '@/composables/useTheme';
 
-const appearance = ref(localStorage.getItem('appearance') ?? 'system');
-
-watch(appearance, (val) => {
-    localStorage.setItem('appearance', val);
-    const root = document.documentElement;
-    if (val === 'dark') {
-        root.classList.add('dark');
-    } else if (val === 'light') {
-        root.classList.remove('dark');
-    } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.classList.toggle('dark', prefersDark);
-    }
-});
+const { appearance } = useTheme();
 
 const options = [
     { value: 'light',  label: 'Clair' },

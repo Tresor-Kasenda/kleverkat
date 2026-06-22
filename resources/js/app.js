@@ -3,6 +3,9 @@ import { createInertiaApp, Link, Head } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
 import '../css/app.css';
+import { useTheme } from '@/composables/useTheme';
+
+useTheme();
 
 createInertiaApp({
     title: (title) => title ? `${title} — ${import.meta.env.VITE_APP_NAME ?? 'KleverKat'}` : (import.meta.env.VITE_APP_NAME ?? 'KleverKat'),
