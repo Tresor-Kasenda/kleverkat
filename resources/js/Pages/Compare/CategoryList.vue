@@ -1,15 +1,16 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
-import CompareLayout from '@/Layouts/CompareLayout.vue';
+import {Head, Link} from '@inertiajs/vue3';
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 defineProps({
-    categories: { type: Array, default: () => [] },
+    categories: {type: Array, default: () => []},
 });
 </script>
 
 <template>
-    <Head title="Que souhaitez-vous comparer ?" />
-    <CompareLayout>
+    <Head title="Que souhaitez-vous comparer ?"/>
+    <AppLayout>
+        <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div class="mb-10 text-center">
             <h1 class="mb-2 text-3xl font-bold text-fg-title">Que souhaitez-vous comparer ?</h1>
             <p class="text-fg-subtext">Sélectionnez une catégorie pour démarrer votre comparaison gratuite.</p>
@@ -35,11 +36,14 @@ defineProps({
                 <p v-if="cat.description" class="line-clamp-2 text-sm text-fg-subtext">{{ cat.description }}</p>
                 <div class="mt-4 flex items-center gap-1 text-sm font-medium text-primary-600">
                     Comparer
-                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/>
+                    <svg class="size-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path clip-rule="evenodd"
+                              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                              fill-rule="evenodd"/>
                     </svg>
                 </div>
             </Link>
         </div>
-    </CompareLayout>
+        </div>
+    </AppLayout>
 </template>

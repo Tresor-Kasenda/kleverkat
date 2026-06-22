@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -23,20 +24,24 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? [
-                    'id'    => $request->user()->id,
-                    'name'  => $request->user()->name,
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
                     'email' => $request->user()->email,
                 ] : null,
                 'currentTeam' => $request->user()?->currentTeam ? [
-                    'id'   => $request->user()->currentTeam->id,
+                    'id' => $request->user()->currentTeam->id,
                     'name' => $request->user()->currentTeam->name,
                     'slug' => $request->user()->currentTeam->slug ?? null,
                 ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
+                'error' => fn () => $request->session()->get('error'),
             ],
+            'navCategories' => fn () => Category::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'slug']),
         ];
     }
 }

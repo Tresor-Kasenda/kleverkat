@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import CompareLayout from '@/Layouts/CompareLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
     category: { type: Object, required: true },
@@ -72,8 +72,9 @@ function submit() {
 
 <template>
     <Head :title="`${product.name} — Questionnaire`" />
-    <CompareLayout>
-        <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+    <AppLayout>
+        <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-fg-subtext">
             <Link :href="route('compare.categories')" class="transition-colors hover:text-zinc-900">Catégories</Link>
             <span>›</span>
             <Link :href="route('compare.sectors', category.slug)" class="transition-colors hover:text-zinc-900">{{ category.name }}</Link>
@@ -236,5 +237,6 @@ function submit() {
                 </button>
             </div>
         </div>
-    </CompareLayout>
+        </div>
+    </AppLayout>
 </template>

@@ -74,22 +74,6 @@ const iconPaths = [
 <template>
     <Head title="Comparez et économisez"/>
     <AppLayout>
-        <template #nav>
-            <Link
-                v-for="cat in categories"
-                :key="cat.id"
-                :href="route('compare.sectors', cat.slug)"
-                class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-blue-600"
-                view-transition
-            >
-                {{ cat.name }}
-                <svg class="size-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2"
-                     viewBox="0 0 24 24">
-                    <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </Link>
-        </template>
-
         <!-- Gradient section -->
         <div class="min-h-[92vh] bg-linear-to-b from-sky-300 via-blue-400 to-blue-700 pb-16 pt-12">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

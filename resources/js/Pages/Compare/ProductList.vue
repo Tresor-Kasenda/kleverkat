@@ -1,21 +1,23 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
-import CompareLayout from '@/Layouts/CompareLayout.vue';
+import {Head, Link} from '@inertiajs/vue3';
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 defineProps({
-    category: { type: Object, required: true },
-    sector:   { type: Object, required: true },
-    products: { type: Array, default: () => [] },
+    category: {type: Object, required: true},
+    sector: {type: Object, required: true},
+    products: {type: Array, default: () => []},
 });
 </script>
 
 <template>
-    <Head :title="`${sector.name} — Produits`" />
-    <CompareLayout>
+    <Head :title="`${sector.name} — Produits`"/>
+    <AppLayout>
         <nav class="mb-6 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
             <Link :href="route('compare.categories')" class="transition-colors hover:text-zinc-900">Catégories</Link>
             <span>›</span>
-            <Link :href="route('compare.sectors', category.slug)" class="transition-colors hover:text-zinc-900">{{ category.name }}</Link>
+            <Link :href="route('compare.sectors', category.slug)" class="transition-colors hover:text-zinc-900">
+                {{ category.name }}
+            </Link>
             <span>›</span>
             <span class="font-medium text-zinc-900">{{ sector.name }}</span>
         </nav>
@@ -37,11 +39,13 @@ defineProps({
             >
                 <div class="mb-3 flex items-start justify-between">
                     <h2 class="text-lg font-semibold">{{ product.name }}</h2>
-                    <span v-if="product.offers_count > 0" class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                    <span v-if="product.offers_count > 0"
+                          class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                         {{ product.offers_count }} offre{{ product.offers_count > 1 ? 's' : '' }}
                     </span>
                 </div>
-                <p v-if="product.description" class="mb-4 line-clamp-3 flex-1 text-sm text-zinc-500">{{ product.description }}</p>
+                <p v-if="product.description" class="mb-4 line-clamp-3 flex-1 text-sm text-zinc-500">
+                    {{ product.description }}</p>
                 <Link
                     :href="route('compare.wizard', [category.slug, sector.slug, product.slug])"
                     class="mt-auto block w-full rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
@@ -50,5 +54,5 @@ defineProps({
                 </Link>
             </div>
         </div>
-    </CompareLayout>
+    </AppLayout>
 </template>

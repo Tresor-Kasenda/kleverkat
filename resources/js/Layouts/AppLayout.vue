@@ -5,6 +5,7 @@ import { computed } from 'vue';
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const flash = computed(() => page.props.flash);
+const navCategories = computed(() => page.props.navCategories ?? []);
 </script>
 
 <template>
@@ -21,9 +22,16 @@ const flash = computed(() => page.props.flash);
                     <span class="text-xl tracking-tight text-fg-title">{{ $page.props.appName ?? 'KleverKat' }}</span>
                 </Link>
 
-                <!-- Nav slot -->
+                <!-- Categories nav -->
                 <nav class="hidden items-center gap-1 md:flex">
-                    <slot name="nav" />
+                    <Link
+                        v-for="cat in navCategories"
+                        :key="cat.id"
+                        :href="route('compare.sectors', cat.slug)"
+                        class="rounded-lg px-3 py-2 text-sm font-medium text-fg-subtext transition-colors hover:bg-bg-high hover:text-fg-title"
+                    >
+                        {{ cat.name }}
+                    </Link>
                 </nav>
 
                 <!-- Auth -->
