@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -21,7 +22,7 @@ test('two factor challenge can be rendered', function () {
 
     $user = User::factory()->withTwoFactor()->create();
 
-    $this->post(route('login.store'), [
+    $this->withoutMiddleware(PreventRequestForgery::class)->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
     ])->assertRedirect(route('two-factor.login'));

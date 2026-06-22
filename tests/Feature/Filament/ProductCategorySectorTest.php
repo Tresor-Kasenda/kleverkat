@@ -20,22 +20,22 @@ test('admin can select category and then filtered sectors in product form', func
 
     Livewire::test(ProductsPage::class)
         ->mountAction('create')
-        ->assertActionDataSet([
+        ->assertSchemaStateSet([
             'category_id' => null,
             'sector_id' => null,
         ])
-        ->setActionData([
-            'category_id' => $categoryA->id,
+        ->set([
+            'mountedActions.0.data.category_id' => $categoryA->id,
         ])
-        ->assertActionDataSet([
+        ->assertSchemaStateSet([
             'category_id' => $categoryA->id,
             'sector_id' => null,
         ])
-        ->setActionData([
-            'category_id' => $categoryA->id,
-            'sector_id' => $sectorA1->id,
+        ->set([
+            'mountedActions.0.data.category_id' => $categoryA->id,
+            'mountedActions.0.data.sector_id' => $sectorA1->id,
         ])
-        ->assertActionDataSet([
+        ->assertSchemaStateSet([
             'category_id' => $categoryA->id,
             'sector_id' => $sectorA1->id,
         ])

@@ -34,14 +34,16 @@ test('admin can create a sector from sector page', function () {
     $this->actingAs($admin);
 
     Livewire::test(SectorPage::class)
-        ->callAction('create', data: [
-            'category_id' => $category->id,
-            'name' => 'Assurances',
-            'slug' => 'assurances',
-            'description' => 'Tous les produits d assurance.',
-            'sort_order' => 1,
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.name' => 'Assurances',
+            'mountedActions.0.data.slug' => 'assurances',
+            'mountedActions.0.data.description' => 'Tous les produits d assurance.',
+            'mountedActions.0.data.sort_order' => 1,
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Sector::class, [
@@ -59,12 +61,14 @@ test('creating a sector without a category is rejected', function () {
     $this->actingAs($admin);
 
     Livewire::test(SectorPage::class)
-        ->callAction('create', data: [
-            'name' => 'Sans catégorie',
-            'slug' => 'sans-categorie',
-            'sort_order' => 1,
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.name' => 'Sans catégorie',
+            'mountedActions.0.data.slug' => 'sans-categorie',
+            'mountedActions.0.data.sort_order' => 1,
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasFormErrors(['category_id']);
 
     $this->assertDatabaseMissing(Sector::class, [
@@ -85,14 +89,16 @@ test('admin can edit a sector from sector page', function () {
     $this->actingAs($admin);
 
     Livewire::test(SectorPage::class)
-        ->callTableAction('edit', $sector, data: [
-            'category_id' => $newCategory->id,
-            'name' => 'Assurances Auto',
-            'slug' => 'assurances-auto',
-            'description' => 'Produits d assurance auto.',
-            'sort_order' => 3,
-            'is_active' => false,
+        ->mountTableAction('edit', $sector)
+        ->set([
+            'mountedActions.0.data.category_id' => $newCategory->id,
+            'mountedActions.0.data.name' => 'Assurances Auto',
+            'mountedActions.0.data.slug' => 'assurances-auto',
+            'mountedActions.0.data.description' => 'Produits d assurance auto.',
+            'mountedActions.0.data.sort_order' => 3,
+            'mountedActions.0.data.is_active' => false,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Sector::class, [

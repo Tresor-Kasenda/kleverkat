@@ -97,10 +97,12 @@ test('admin can edit a team name and slug', function () {
     $this->actingAs($admin);
 
     Livewire::test(TeamsPage::class)
-        ->callTableAction('edit', $team, [
-            'name' => 'Nouvelle équipe',
-            'slug' => 'nouvelle-equipe',
+        ->mountTableAction('edit', $team)
+        ->set([
+            'mountedActions.0.data.name' => 'Nouvelle équipe',
+            'mountedActions.0.data.slug' => 'nouvelle-equipe',
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas('teams', [

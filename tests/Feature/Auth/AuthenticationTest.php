@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Features;
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse;
@@ -14,7 +15,7 @@ test('login screen can be rendered', function () {
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
@@ -43,7 +44,7 @@ test('passkey login response redirects to the current team dashboard', function 
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'wrong-password',
     ]);
@@ -65,7 +66,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
 
     $user = User::factory()->withTwoFactor()->create();
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
@@ -77,7 +78,7 @@ test('users with two factor enabled are redirected to two factor challenge', fun
 test('users can logout', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->post(route('logout'));
+    $response = $this->actingAs($user)->withoutMiddleware(PreventRequestForgery::class)->post(route('logout'));
 
     $response->assertRedirect(route('home'));
 

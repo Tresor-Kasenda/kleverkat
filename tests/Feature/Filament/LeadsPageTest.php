@@ -57,10 +57,12 @@ test('admin can update lead status', function () {
     $this->actingAs($admin);
 
     Livewire::test(LeadsPage::class)
-        ->callTableAction('edit', $lead, data: [
-            'status' => LeadStatus::Contacted->value,
-            'action_type' => $lead->action_type->value,
+        ->mountTableAction('edit', $lead)
+        ->set([
+            'mountedActions.0.data.status' => LeadStatus::Contacted->value,
+            'mountedActions.0.data.action_type' => $lead->action_type->value,
         ])
+        ->callMountedTableAction()
         ->assertHasNoTableActionErrors();
 
     expect($lead->fresh()->status)->toEqual(LeadStatus::Contacted);

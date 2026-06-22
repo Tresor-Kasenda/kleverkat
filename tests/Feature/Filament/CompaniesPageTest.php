@@ -40,25 +40,27 @@ test('admin can link a company to a category, a team and its owner', function ()
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callAction('create', data: [
-            'category_id' => $category->id,
-            'team_id' => $team->id,
-            'manager_id' => $owner->id,
-            'name' => 'Allianz Congo',
-            'slug' => 'allianz-congo',
-            'logo_path' => 'logos/allianz-congo.png',
-            'description' => 'Entreprise partenaire du secteur assurance.',
-            'website_url' => 'https://allianz.example.com',
-            'support_email' => 'support@allianz.example.com',
-            'support_phone' => '+243 970 000 000',
-            'contact_name' => 'Claire Mukendi',
-            'address_line_1' => '10 avenue de la Paix',
-            'address_line_2' => 'Immeuble A',
-            'city' => 'Lubumbashi',
-            'postal_code' => '7001',
-            'country' => 'RDC',
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.team_id' => $team->id,
+            'mountedActions.0.data.manager_id' => $owner->id,
+            'mountedActions.0.data.name' => 'Allianz Congo',
+            'mountedActions.0.data.slug' => 'allianz-congo',
+            'mountedActions.0.data.logo_path' => 'logos/allianz-congo.png',
+            'mountedActions.0.data.description' => 'Entreprise partenaire du secteur assurance.',
+            'mountedActions.0.data.website_url' => 'https://allianz.example.com',
+            'mountedActions.0.data.support_email' => 'support@allianz.example.com',
+            'mountedActions.0.data.support_phone' => '+243 970 000 000',
+            'mountedActions.0.data.contact_name' => 'Claire Mukendi',
+            'mountedActions.0.data.address_line_1' => '10 avenue de la Paix',
+            'mountedActions.0.data.address_line_2' => 'Immeuble A',
+            'mountedActions.0.data.city' => 'Lubumbashi',
+            'mountedActions.0.data.postal_code' => '7001',
+            'mountedActions.0.data.country' => 'RDC',
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Company::class, [
@@ -83,14 +85,16 @@ test('the manager must be an owner of the selected team', function () {
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callAction('create', data: [
-            'category_id' => $category->id,
-            'team_id' => $team->id,
-            'manager_id' => $member->id,
-            'name' => 'Rawsur Congo',
-            'slug' => 'rawsur-congo',
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.team_id' => $team->id,
+            'mountedActions.0.data.manager_id' => $member->id,
+            'mountedActions.0.data.name' => 'Rawsur Congo',
+            'mountedActions.0.data.slug' => 'rawsur-congo',
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasFormErrors(['manager_id']);
 
     $this->assertDatabaseMissing(Company::class, ['slug' => 'rawsur-congo']);
@@ -120,25 +124,27 @@ test('admin can edit a company from companies page', function () {
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callTableAction('edit', $company, [
-            'category_id' => $updatedCategory->id,
-            'team_id' => $updatedTeam->id,
-            'manager_id' => $updatedOwner->id,
-            'name' => 'Rawsur Premium',
-            'slug' => 'rawsur-premium',
-            'logo_path' => 'logos/rawsur-premium.png',
-            'description' => 'Fiche partenaire mise a jour.',
-            'website_url' => 'https://premium.rawsur.test',
-            'support_email' => 'support@premium.rawsur.test',
-            'support_phone' => '+243 999 000 111',
-            'contact_name' => 'Paul Ilunga',
-            'address_line_1' => '25 boulevard Kasa-Vubu',
-            'address_line_2' => null,
-            'city' => 'Kinshasa',
-            'postal_code' => '1000',
-            'country' => 'RDC',
-            'is_active' => false,
+        ->mountTableAction('edit', $company)
+        ->set([
+            'mountedActions.0.data.category_id' => $updatedCategory->id,
+            'mountedActions.0.data.team_id' => $updatedTeam->id,
+            'mountedActions.0.data.manager_id' => $updatedOwner->id,
+            'mountedActions.0.data.name' => 'Rawsur Premium',
+            'mountedActions.0.data.slug' => 'rawsur-premium',
+            'mountedActions.0.data.logo_path' => 'logos/rawsur-premium.png',
+            'mountedActions.0.data.description' => 'Fiche partenaire mise a jour.',
+            'mountedActions.0.data.website_url' => 'https://premium.rawsur.test',
+            'mountedActions.0.data.support_email' => 'support@premium.rawsur.test',
+            'mountedActions.0.data.support_phone' => '+243 999 000 111',
+            'mountedActions.0.data.contact_name' => 'Paul Ilunga',
+            'mountedActions.0.data.address_line_1' => '25 boulevard Kasa-Vubu',
+            'mountedActions.0.data.address_line_2' => null,
+            'mountedActions.0.data.city' => 'Kinshasa',
+            'mountedActions.0.data.postal_code' => '1000',
+            'mountedActions.0.data.country' => 'RDC',
+            'mountedActions.0.data.is_active' => false,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Company::class, [
@@ -166,14 +172,16 @@ test('notification is sent to manager when company is created', function () {
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callAction('create', data: [
-            'category_id' => $category->id,
-            'team_id' => $team->id,
-            'manager_id' => $owner->id,
-            'name' => 'Allianz Congo',
-            'slug' => 'allianz-congo',
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.team_id' => $team->id,
+            'mountedActions.0.data.manager_id' => $owner->id,
+            'mountedActions.0.data.name' => 'Allianz Congo',
+            'mountedActions.0.data.slug' => 'allianz-congo',
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     Notification::assertSentTo($owner, CompanyAssignedManager::class, function (CompanyAssignedManager $notification): bool {
@@ -200,14 +208,16 @@ test('notification is sent to new manager when manager changes during edit', fun
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callTableAction('edit', $company, [
-            'category_id' => $category->id,
-            'team_id' => $team->id,
-            'manager_id' => $newOwner->id,
-            'name' => $company->name,
-            'slug' => $company->slug,
-            'is_active' => true,
+        ->mountTableAction('edit', $company)
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.team_id' => $team->id,
+            'mountedActions.0.data.manager_id' => $newOwner->id,
+            'mountedActions.0.data.name' => $company->name,
+            'mountedActions.0.data.slug' => $company->slug,
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     Notification::assertSentTo($newOwner, CompanyAssignedManager::class, function (CompanyAssignedManager $notification): bool {
@@ -232,14 +242,16 @@ test('no notification is sent when manager does not change during edit', functio
     $this->actingAs($admin);
 
     Livewire::test(CompaniesPage::class)
-        ->callTableAction('edit', $company, [
-            'category_id' => $category->id,
-            'team_id' => $team->id,
-            'manager_id' => $owner->id,
-            'name' => 'Updated Name',
-            'slug' => 'updated-name',
-            'is_active' => true,
+        ->mountTableAction('edit', $company)
+        ->set([
+            'mountedActions.0.data.category_id' => $category->id,
+            'mountedActions.0.data.team_id' => $team->id,
+            'mountedActions.0.data.manager_id' => $owner->id,
+            'mountedActions.0.data.name' => 'Updated Name',
+            'mountedActions.0.data.slug' => 'updated-name',
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     Notification::assertNotSentTo($owner, CompanyAssignedManager::class);

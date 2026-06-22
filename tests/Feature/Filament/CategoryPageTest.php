@@ -33,13 +33,15 @@ test('admin can create a category from category page', function () {
     $this->actingAs($admin);
 
     Livewire::test(CategoryPage::class)
-        ->callAction('create', data: [
-            'name' => 'Services financiers',
-            'slug' => 'services-financiers',
-            'description' => 'Banque, assurance et investissement.',
-            'sort_order' => 1,
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.name' => 'Services financiers',
+            'mountedActions.0.data.slug' => 'services-financiers',
+            'mountedActions.0.data.description' => 'Banque, assurance et investissement.',
+            'mountedActions.0.data.sort_order' => 1,
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Category::class, [
@@ -57,13 +59,15 @@ test('admin can edit a category from category page', function () {
     $this->actingAs($admin);
 
     Livewire::test(CategoryPage::class)
-        ->callTableAction('edit', $category, data: [
-            'name' => 'Énergie & Industrie',
-            'slug' => 'energie-industrie',
-            'description' => 'Énergie, mines et transport.',
-            'sort_order' => 5,
-            'is_active' => false,
+        ->mountTableAction('edit', $category)
+        ->set([
+            'mountedActions.0.data.name' => 'Énergie & Industrie',
+            'mountedActions.0.data.slug' => 'energie-industrie',
+            'mountedActions.0.data.description' => 'Énergie, mines et transport.',
+            'mountedActions.0.data.sort_order' => 5,
+            'mountedActions.0.data.is_active' => false,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Category::class, [

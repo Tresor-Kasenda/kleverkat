@@ -103,26 +103,30 @@ describe('Admin — création du catalogue via les pages Filament', function () 
         $this->actingAs($admin);
 
         Livewire::test(CategoryPage::class)
-            ->callAction('create', data: [
-                'name' => 'Assurance & Protection',
-                'slug' => 'assurance-protection',
-                'description' => 'Produits de couverture des personnes, biens et responsabilités.',
-                'sort_order' => 1,
-                'is_active' => true,
+            ->call('mountAction', 'create')
+            ->set([
+                'mountedActions.0.data.name' => 'Assurance & Protection',
+                'mountedActions.0.data.slug' => 'assurance-protection',
+                'mountedActions.0.data.description' => 'Produits de couverture des personnes, biens et responsabilités.',
+                'mountedActions.0.data.sort_order' => 1,
+                'mountedActions.0.data.is_active' => true,
             ])
+            ->call('callMountedAction')
             ->assertHasNoFormErrors();
 
         $category = Category::where('slug', 'assurance-protection')->firstOrFail();
 
         Livewire::test(SectorPage::class)
-            ->callAction('create', data: [
-                'category_id' => $category->id,
-                'name' => 'Assurance Voyage',
-                'slug' => 'assurance-voyage',
-                'description' => 'Couverture médicale et annulation pour les voyages en France et à l\'étranger.',
-                'sort_order' => 1,
-                'is_active' => true,
+            ->call('mountAction', 'create')
+            ->set([
+                'mountedActions.0.data.category_id' => $category->id,
+                'mountedActions.0.data.name' => 'Assurance Voyage',
+                'mountedActions.0.data.slug' => 'assurance-voyage',
+                'mountedActions.0.data.description' => 'Couverture médicale et annulation pour les voyages en France et à l\'étranger.',
+                'mountedActions.0.data.sort_order' => 1,
+                'mountedActions.0.data.is_active' => true,
             ])
+            ->call('callMountedAction')
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas(Sector::class, [

@@ -35,13 +35,15 @@ test('admin can create a questionnaire', function () {
     $this->actingAs($admin);
 
     Livewire::test(QuestionnairesPage::class)
-        ->callAction('create', data: [
-            'product_id' => $product->id,
-            'name' => 'Questionnaire Auto',
-            'version' => 1,
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.product_id' => $product->id,
+            'mountedActions.0.data.name' => 'Questionnaire Auto',
+            'mountedActions.0.data.version' => 1,
+            'mountedActions.0.data.is_active' => true,
         ])
-        ->assertHasNoActionErrors();
+        ->call('callMountedAction')
+        ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Questionnaire::class, [
         'product_id' => $product->id,
@@ -58,12 +60,14 @@ test('admin can edit a questionnaire name', function () {
     $this->actingAs($admin);
 
     Livewire::test(QuestionnairesPage::class)
-        ->callTableAction('edit', $questionnaire, data: [
-            'product_id' => $questionnaire->product_id,
-            'name' => 'Questionnaire Modifié',
-            'version' => $questionnaire->version,
-            'is_active' => true,
+        ->mountTableAction('edit', $questionnaire)
+        ->set([
+            'mountedActions.0.data.product_id' => $questionnaire->product_id,
+            'mountedActions.0.data.name' => 'Questionnaire Modifié',
+            'mountedActions.0.data.version' => $questionnaire->version,
+            'mountedActions.0.data.is_active' => true,
         ])
+        ->callMountedTableAction()
         ->assertHasNoTableActionErrors();
 
     $this->assertDatabaseHas(Questionnaire::class, [
@@ -116,11 +120,13 @@ test('questionnaire requires a product', function () {
     $this->actingAs($admin);
 
     Livewire::test(QuestionnairesPage::class)
-        ->callAction('create', data: [
-            'product_id' => null,
-            'name' => 'Sans produit',
-            'version' => 1,
-            'is_active' => true,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.product_id' => null,
+            'mountedActions.0.data.name' => 'Sans produit',
+            'mountedActions.0.data.version' => 1,
+            'mountedActions.0.data.is_active' => true,
         ])
-        ->assertHasActionErrors(['product_id']);
+        ->call('callMountedAction')
+        ->assertHasFormErrors(['product_id']);
 });

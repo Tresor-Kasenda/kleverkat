@@ -37,32 +37,34 @@ test('admin can create a product with all fields', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callAction('create', data: [
-            'category_id' => $sector->category_id,
-            'sector_id' => $sector->id,
-            'code' => 'ASS-VIE-001',
-            'name' => 'Assurance Vie Classique',
-            'slug' => 'assurance-vie-classique',
-            'short_description' => 'Couverture décès avec capital garanti.',
-            'description' => 'Produit complet pour assurer votre famille.',
-            'price_type' => ProductPriceType::Fixed->value,
-            'base_price' => 25.00,
-            'currency' => 'USD',
-            'billing_frequency' => ProductBillingFrequency::Monthly->value,
-            'min_age' => 18,
-            'max_age' => 65,
-            'min_insured_amount' => 1000.00,
-            'max_insured_amount' => 500000.00,
-            'duration_months' => 12,
-            'waiting_period_days' => 30,
-            'features' => [['label' => 'Capital décès garanti']],
-            'exclusions' => [['label' => 'Suicide dans les 12 premiers mois']],
-            'sort_order' => 10,
-            'is_active' => true,
-            'is_featured' => true,
-            'available_from' => '2026-01-01',
-            'available_until' => null,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $sector->category_id,
+            'mountedActions.0.data.sector_id' => $sector->id,
+            'mountedActions.0.data.code' => 'ASS-VIE-001',
+            'mountedActions.0.data.name' => 'Assurance Vie Classique',
+            'mountedActions.0.data.slug' => 'assurance-vie-classique',
+            'mountedActions.0.data.short_description' => 'Couverture décès avec capital garanti.',
+            'mountedActions.0.data.description' => 'Produit complet pour assurer votre famille.',
+            'mountedActions.0.data.price_type' => ProductPriceType::Fixed->value,
+            'mountedActions.0.data.base_price' => 25.00,
+            'mountedActions.0.data.currency' => 'USD',
+            'mountedActions.0.data.billing_frequency' => ProductBillingFrequency::Monthly->value,
+            'mountedActions.0.data.min_age' => 18,
+            'mountedActions.0.data.max_age' => 65,
+            'mountedActions.0.data.min_insured_amount' => 1000.00,
+            'mountedActions.0.data.max_insured_amount' => 500000.00,
+            'mountedActions.0.data.duration_months' => 12,
+            'mountedActions.0.data.waiting_period_days' => 30,
+            'mountedActions.0.data.features' => [['label' => 'Capital décès garanti']],
+            'mountedActions.0.data.exclusions' => [['label' => 'Suicide dans les 12 premiers mois']],
+            'mountedActions.0.data.sort_order' => 10,
+            'mountedActions.0.data.is_active' => true,
+            'mountedActions.0.data.is_featured' => true,
+            'mountedActions.0.data.available_from' => '2026-01-01',
+            'mountedActions.0.data.available_until' => null,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Product::class, [
@@ -88,17 +90,19 @@ test('admin can create a product with minimal fields', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callAction('create', data: [
-            'category_id' => $sector->category_id,
-            'sector_id' => $sector->id,
-            'name' => 'Produit sur devis',
-            'slug' => 'produit-sur-devis',
-            'price_type' => ProductPriceType::OnQuote->value,
-            'currency' => 'USD',
-            'sort_order' => 0,
-            'is_active' => true,
-            'is_featured' => false,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $sector->category_id,
+            'mountedActions.0.data.sector_id' => $sector->id,
+            'mountedActions.0.data.name' => 'Produit sur devis',
+            'mountedActions.0.data.slug' => 'produit-sur-devis',
+            'mountedActions.0.data.price_type' => ProductPriceType::OnQuote->value,
+            'mountedActions.0.data.currency' => 'USD',
+            'mountedActions.0.data.sort_order' => 0,
+            'mountedActions.0.data.is_active' => true,
+            'mountedActions.0.data.is_featured' => false,
         ])
+        ->call('callMountedAction')
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Product::class, [
@@ -124,22 +128,24 @@ test('admin can edit a product', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callTableAction('edit', $product, data: [
-            'category_id' => $sector->category_id,
-            'sector_id' => $sector->id,
-            'name' => 'Produit Mis À Jour',
-            'slug' => 'produit-mis-a-jour',
-            'price_type' => ProductPriceType::Fixed->value,
-            'base_price' => 50.00,
-            'currency' => 'CDF',
-            'billing_frequency' => ProductBillingFrequency::Annual->value,
-            'min_age' => 21,
-            'max_age' => 60,
-            'duration_months' => 24,
-            'is_active' => false,
-            'is_featured' => true,
-            'sort_order' => 5,
+        ->mountTableAction('edit', $product)
+        ->set([
+            'mountedActions.0.data.category_id' => $sector->category_id,
+            'mountedActions.0.data.sector_id' => $sector->id,
+            'mountedActions.0.data.name' => 'Produit Mis À Jour',
+            'mountedActions.0.data.slug' => 'produit-mis-a-jour',
+            'mountedActions.0.data.price_type' => ProductPriceType::Fixed->value,
+            'mountedActions.0.data.base_price' => 50.00,
+            'mountedActions.0.data.currency' => 'CDF',
+            'mountedActions.0.data.billing_frequency' => ProductBillingFrequency::Annual->value,
+            'mountedActions.0.data.min_age' => 21,
+            'mountedActions.0.data.max_age' => 60,
+            'mountedActions.0.data.duration_months' => 24,
+            'mountedActions.0.data.is_active' => false,
+            'mountedActions.0.data.is_featured' => true,
+            'mountedActions.0.data.sort_order' => 5,
         ])
+        ->callMountedTableAction()
         ->assertHasNoFormErrors();
 
     $this->assertDatabaseHas(Product::class, [
@@ -204,18 +210,20 @@ test('product code must be unique', function () {
     $this->actingAs($admin);
 
     Livewire::test(ProductsPage::class)
-        ->callAction('create', data: [
-            'category_id' => $sector->category_id,
-            'sector_id' => $sector->id,
-            'name' => 'Autre produit',
-            'slug' => 'autre-produit',
-            'code' => 'ASS-001',
-            'price_type' => ProductPriceType::OnQuote->value,
-            'currency' => 'USD',
-            'sort_order' => 0,
-            'is_active' => true,
-            'is_featured' => false,
+        ->call('mountAction', 'create')
+        ->set([
+            'mountedActions.0.data.category_id' => $sector->category_id,
+            'mountedActions.0.data.sector_id' => $sector->id,
+            'mountedActions.0.data.name' => 'Autre produit',
+            'mountedActions.0.data.slug' => 'autre-produit',
+            'mountedActions.0.data.code' => 'ASS-001',
+            'mountedActions.0.data.price_type' => ProductPriceType::OnQuote->value,
+            'mountedActions.0.data.currency' => 'USD',
+            'mountedActions.0.data.sort_order' => 0,
+            'mountedActions.0.data.is_active' => true,
+            'mountedActions.0.data.is_featured' => false,
         ])
+        ->call('callMountedAction')
         ->assertHasFormErrors(['code']);
 });
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
@@ -9,7 +10,7 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
-    $response = $this->post(route('register.store'), [
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'test@example.com',
         'password' => 'password',
@@ -19,7 +20,7 @@ test('new users can register', function () {
     $user = User::where('email', 'test@example.com')->first();
 
     $response->assertSessionHasNoErrors()
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('dashboard', ['current_team' => $user->fresh()->personalTeam()->slug], absolute: false));
 
     $this->assertAuthenticated();
 });
