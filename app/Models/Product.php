@@ -57,6 +57,12 @@ class Product extends Model
         return $this->hasMany(Offer::class);
     }
 
+    /** @return HasMany<Questionnaire, $this> */
+    public function questionnaires(): HasMany
+    {
+        return $this->hasMany(Questionnaire::class);
+    }
+
     /**
      * @return array<string, string|class-string>
      */

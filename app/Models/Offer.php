@@ -45,6 +45,18 @@ class Offer extends Model
         return $this->hasMany(OfferFeature::class)->orderBy('sort_order');
     }
 
+    /** @return HasMany<OfferRule, $this> */
+    public function rules(): HasMany
+    {
+        return $this->hasMany(OfferRule::class)->orderBy('priority')->orderBy('rule_type');
+    }
+
+    /** @return HasMany<Lead, $this> */
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class);
+    }
+
     protected function casts(): array
     {
         return [

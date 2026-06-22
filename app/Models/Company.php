@@ -63,12 +63,16 @@ class Company extends Model
         return $this->belongsTo(User::class, 'manager_id');
     }
 
-    /**
-     * @return HasMany<Offer, $this>
-     */
+    /** @return HasMany<Offer, $this> */
     public function offers(): HasMany
     {
         return $this->hasMany(Offer::class);
+    }
+
+    /** @return HasMany<Lead, $this> */
+    public function leads(): HasMany
+    {
+        return $this->hasMany(Lead::class);
     }
 
     public function isManagedBy(User $user): bool

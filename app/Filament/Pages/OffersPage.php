@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Enums\OfferRuleOperator;
+use App\Enums\OfferRuleType;
 use App\Models\Category;
 use App\Models\Offer;
+use App\Models\Question;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -354,6 +357,28 @@ class OffersPage extends Page implements HasTable
                                 ->columnSpanFull(),
                         ]),
 
+                    Tab::make('Règles')
+                        ->icon('heroicon-o-adjustments-horizontal')
+                        ->badge(fn (?Offer $record): ?int => $record?->rules()->count() ?: null)
+                        ->schema([
+                            Repeater::make('rules')
+                                ->relationship('rules')
+                                ->label('')
+                                ->schema($this->getOfferRuleFields())
+                                ->addActionLabel('Ajouter une règle')
+                                ->collapsible()
+                                ->itemLabel(function (array $state): string {
+                                    $ruleType = OfferRuleType::tryFrom((string) ($state['rule_type'] ?? ''));
+                                    $type = $ruleType?->label() ?? '?';
+                                    $ruleOperator = OfferRuleOperator::tryFrom((string) ($state['operator'] ?? ''));
+                                    $op = $ruleOperator->value ?? '?';
+
+                                    return $type.' — '.$op.' '.(string) ($state['expected_value'] ?? '');
+                                })
+                                ->defaultItems(0)
+                                ->columnSpanFull(),
+                        ]),
+
                     Tab::make('Publication')
                         ->icon('heroicon-o-eye')
                         ->schema([
@@ -373,6 +398,91 @@ class OffersPage extends Page implements HasTable
                         ]),
                 ])
                 ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    protected function getOfferRuleFields(): array
+    {
+        return [
+            Grid::make(3)->schema([
+                Select::make('rule_type')
+                    ->label('Type de règle')
+                    ->options(OfferRuleType::options())
+                    ->required()
+                    ->live(),
+                Select::make('operator')
+                    ->label('Opérateur')
+                    ->options(OfferRuleOperator::options())
+                    ->required(),
+                TextInput::make('expected_value')
+                    ->label('Valeur attendue')
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('ex: 25, oui, paris'),
+            ]),
+
+            Select::make('question_id')
+                ->label('Question liée')
+                ->options(function (Get $get): array {
+                    $productId = $get('../product_id');
+
+                    return Question::query()
+                        ->whereHas('questionnaire', fn ($q) => $q->where('product_id', $productId))
+                        ->with('questionnaire')
+                        ->get()
+                        ->mapWithKeys(fn (Question $q): array => [
+                            $q->id => $q->questionnaire->name.' › '.$q->label,
+                        ])
+                        ->all();
+                })
+                ->required()
+                ->searchable()
+                ->helperText('Seules les questions du produit sélectionné sont affichées.')
+                ->columnSpanFull(),
+
+            Grid::make(4)->schema([
+                TextInput::make('score_delta')
+                    ->label('Delta score')
+                    ->numeric()
+                    ->placeholder('ex: 15 ou -10')
+                    ->helperText('Points ajoutés au score si la règle est satisfaite.')
+                    ->visible(fn (Get $get): bool => $get('rule_type') === OfferRuleType::Scoring->value),
+                TextInput::make('weight')
+                    ->label('Poids')
+                    ->numeric()
+                    ->minValue(0)
+                    ->placeholder('ex: 1.5')
+                    ->helperText('Multiplicateur appliqué au delta score.')
+                    ->visible(fn (Get $get): bool => $get('rule_type') === OfferRuleType::Scoring->value),
+                TextInput::make('price_delta')
+                    ->label('Delta prix (€)')
+                    ->numeric()
+                    ->placeholder('ex: 50 ou -20')
+                    ->helperText('Montant ajouté au prix calculé.')
+                    ->visible(fn (Get $get): bool => $get('rule_type') === OfferRuleType::Pricing->value),
+                TextInput::make('price_multiplier')
+                    ->label('Multiplicateur prix')
+                    ->numeric()
+                    ->minValue(0)
+                    ->placeholder('ex: 1.15 = +15%')
+                    ->helperText('Multiplié par le prix de base.')
+                    ->visible(fn (Get $get): bool => $get('rule_type') === OfferRuleType::Pricing->value),
+            ]),
+
+            Grid::make(2)->schema([
+                TextInput::make('priority')
+                    ->label("Priorité d'évaluation")
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0)
+                    ->helperText('Les règles sont évaluées par ordre croissant de priorité.'),
+                Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true),
+            ]),
         ];
     }
 
