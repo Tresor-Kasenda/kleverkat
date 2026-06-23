@@ -2,9 +2,9 @@
 import {Link, usePage} from '@inertiajs/vue3';
 import {ArrowRight, ChevronDown, ChevronRight, CircleHelp, Layers3, Moon, Sun} from 'lucide-vue-next';
 import {useTheme} from '@/composables/useTheme';
+import {computed, nextTick, onBeforeUnmount, ref} from 'vue';
 
 const {isDark, toggle} = useTheme();
-import {computed, nextTick, onBeforeUnmount, ref} from 'vue';
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
@@ -338,7 +338,7 @@ onBeforeUnmount(cancelMenuClose);
                                         v-for="product in activeProducts"
                                         :key="product.id"
                                         :href="route('compare.wizard', [activeCategory?.slug, activeSector?.slug, product?.slug])"
-                                        class="group rounded-xl border border-transparent px-3.5 py-3 transition-colors hover:border-border hover:bg-bg-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
+                                        class="group px-3.5 py-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
                                         @click="closeMenu"
                                     >
                                         <span class="flex items-start justify-between gap-3">
@@ -394,7 +394,8 @@ onBeforeUnmount(cancelMenuClose);
 
                                 <div class="mt-4 rounded-2xl bg-primary-600 p-5 text-white">
                                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary-100">
-                                        KleverKat</p>
+                                        KleverKat
+                                    </p>
                                     <p class="mt-2 text-base font-bold">Trouvez le produit adapté à votre besoin.</p>
                                     <Link
                                         :href="activeSector

@@ -75,13 +75,13 @@ const iconPaths = [
     <Head title="Comparez et économisez"/>
     <AppLayout>
         <!-- Gradient section -->
-        <div class="min-h-[92vh] bg-linear-to-b from-sky-300 via-blue-400 to-blue-700 pb-16 pt-12">
+        <div class="min-h-[92vh] pb-16 pt-12">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                 <!-- Breadcrumb / Title -->
                 <div class="mb-8">
                     <template v-if="view === 'categories'">
-                        <h1 class="text-3xl font-bold text-white sm:text-4xl">
+                        <h1 class="text-3xl font-bold sm:text-4xl">
                             <span class="mr-2 text-orange-400">✦</span>
                             Avec KleverKat, comparer c'est gagner
                         </h1>
