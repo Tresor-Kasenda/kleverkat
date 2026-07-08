@@ -1,27 +1,197 @@
 <script setup>
 import {computed, ref} from 'vue';
 import {Head, Link} from '@inertiajs/vue3';
+import {
+    ArrowLeft,
+    ArrowRight,
+    BadgeCheck,
+    Banknote,
+    Building2,
+    Car,
+    CheckCircle2,
+    CreditCard,
+    HeartPulse,
+    Leaf,
+    Plane,
+    ShieldCheck,
+    Sparkles,
+    Zap,
+} from 'lucide-vue-next';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
     categories: {type: Array, default: () => []},
 });
 
-const view = ref('categories');
+const view = ref('insuranceProducts');
 const selectedCategory = ref(null);
 const selectedSector = ref(null);
 const sectors = ref([]);
 const products = ref([]);
 const showAll = ref(false);
 
+const insuranceCategory = computed(() => props.categories.find((category) => {
+    const haystack = normalizeText(`${category?.name ?? ''} ${category?.slug ?? ''}`);
+
+    return haystack.includes('assurance') || haystack.includes('insurance');
+}) ?? null);
+
+const insuranceProducts = computed(() => {
+    if (!insuranceCategory.value) {
+        return [];
+    }
+
+    return (insuranceCategory.value.sectors ?? []).flatMap((sector) => (sector.products ?? []).map((product) => ({
+        ...product,
+        category: insuranceCategory.value,
+        sector,
+    })));
+});
+
 const items = computed(() => {
+    if (view.value === 'insuranceProducts') return insuranceProducts.value;
     if (view.value === 'sectors') return sectors.value;
     if (view.value === 'products') return products.value;
+
     return props.categories;
 });
 
 const visibleItems = computed(() => showAll.value ? items.value : items.value.slice(0, 6));
 const hasMore = computed(() => !showAll.value && items.value.length > 6);
+
+const viewCopy = computed(() => {
+    if (view.value === 'insuranceProducts') {
+        return {
+            eyebrow: 'Produits d’assurance',
+            title: 'Trouvez l’assurance qui vous correspond',
+            subtitle: 'Auto, habitation, santé ou voyage : choisissez votre besoin et lancez le bon comparatif.',
+        };
+    }
+
+    if (view.value === 'sectors') {
+        return {
+            eyebrow: 'Choisissez un secteur',
+            title: selectedCategory.value?.name ?? 'Choisissez votre besoin',
+            subtitle: 'Affinez votre recherche pour accéder au comparatif le plus pertinent.',
+        };
+    }
+
+    if (view.value === 'products') {
+        return {
+            eyebrow: 'Choisissez un produit',
+            title: selectedSector.value?.name ?? 'Sélectionnez une offre',
+            subtitle: 'Lancez le parcours adapté à votre situation et comparez les options disponibles.',
+        };
+    }
+
+    return {
+        eyebrow: 'Choisissez une catégorie',
+        title: 'Trouvez l’offre qui vous correspond',
+        subtitle: 'KleverKat vous guide vers les bons comparatifs, sans jargon et sans perte de temps.',
+    };
+});
+
+const primaryActionLabel = computed(() => {
+    if (view.value === 'insuranceProducts') return 'Comparer le premier produit';
+    if (view.value === 'sectors') return 'Voir les produits';
+    if (view.value === 'products') return 'Comparer le premier produit';
+
+    return 'Démarrer ma comparaison';
+});
+
+const primaryProductHref = computed(() => {
+    const firstProduct = visibleItems.value[0] ?? items.value[0];
+
+    if (!firstProduct || !firstProduct.category || !firstProduct.sector) {
+        return null;
+    }
+
+    return route('compare.wizard', [firstProduct.category.slug, firstProduct.sector.slug, firstProduct.slug]);
+});
+
+const reassuranceItems = [
+    {label: 'Gratuit', icon: CheckCircle2},
+    {label: 'Sans engagement', icon: Leaf},
+];
+
+const visualRules = [
+    {keywords: ['auto', 'automobile', 'voiture'], icon: Car, bg: 'bg-primary-50', text: 'text-primary-600'},
+    {keywords: ['habitation', 'maison', 'immobilier', 'logement'], icon: Building2, bg: 'bg-secondary-50', text: 'text-secondary-700'},
+    {keywords: ['sante', 'mutuelle'], icon: HeartPulse, bg: 'bg-orange-50', text: 'text-primary-600'},
+    {keywords: ['voyage'], icon: Plane, bg: 'bg-blue-50', text: 'text-blue-600'},
+    {keywords: ['banque', 'compte'], icon: Banknote, bg: 'bg-emerald-50', text: 'text-emerald-700'},
+    {keywords: ['carte', 'credit'], icon: CreditCard, bg: 'bg-teal-50', text: 'text-teal-700'},
+    {keywords: ['energie', 'énergie', 'electricite', 'gaz'], icon: Zap, bg: 'bg-amber-50', text: 'text-amber-600'},
+    {keywords: ['assurance'], icon: ShieldCheck, bg: 'bg-primary-50', text: 'text-primary-600'},
+];
+
+const fallbackVisuals = [
+    {icon: Sparkles, bg: 'bg-primary-50', text: 'text-primary-600'},
+    {icon: BadgeCheck, bg: 'bg-secondary-50', text: 'text-secondary-700'},
+    {icon: ShieldCheck, bg: 'bg-slate-100', text: 'text-slate-600'},
+];
+
+function normalizeText(value) {
+    return (value ?? '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+
+function getItemVisual(item, index) {
+    const haystack = normalizeText(`${item?.name ?? ''} ${item?.slug ?? ''} ${item?.sector?.name ?? ''} ${item?.sector?.slug ?? ''}`);
+    const matchingRule = visualRules.find((rule) => rule.keywords.some((keyword) => haystack.includes(normalizeText(keyword))));
+
+    return matchingRule ?? fallbackVisuals[index % fallbackVisuals.length];
+}
+
+function getItemMeta(item) {
+    if (view.value === 'insuranceProducts') {
+        if ((item.offers_count ?? 0) > 0) {
+            return `${item.offers_count} offre${item.offers_count > 1 ? 's' : ''}`;
+        }
+
+        return item.sector?.name ?? 'Produit d’assurance';
+    }
+
+    if (view.value === 'categories') {
+        const count = item.sectors_count ?? item.sectors?.length ?? 0;
+
+        return `${count} secteur${count > 1 ? 's' : ''}`;
+    }
+
+    if (view.value === 'sectors') {
+        const count = item.products_count ?? item.products?.length ?? 0;
+
+        return `${count} produit${count > 1 ? 's' : ''}`;
+    }
+
+    if ((item.offers_count ?? 0) > 0) {
+        return `${item.offers_count} offre${item.offers_count > 1 ? 's' : ''}`;
+    }
+
+    return 'Bientôt disponible';
+}
+
+function getCardActionLabel() {
+    if (view.value === 'insuranceProducts') return 'Comparer';
+    if (view.value === 'categories') return 'Explorer';
+    if (view.value === 'sectors') return 'Voir les produits';
+
+    return 'Comparer';
+}
+
+function getProductHref(item) {
+    const category = item.category ?? selectedCategory.value;
+    const sector = item.sector ?? selectedSector.value;
+
+    if (!category || !sector) {
+        return route('compare.categories');
+    }
+
+    return route('compare.wizard', [category.slug, sector.slug, item.slug]);
+}
 
 function browseCategory(category) {
     selectedCategory.value = category;
@@ -39,166 +209,259 @@ function browseSector(sector) {
     view.value = 'products';
 }
 
+function resetToInsuranceProducts() {
+    selectedCategory.value = null;
+    selectedSector.value = null;
+    sectors.value = [];
+    products.value = [];
+    showAll.value = false;
+    view.value = 'insuranceProducts';
+}
+
 function back() {
     if (view.value === 'products') {
         view.value = 'sectors';
         selectedSector.value = null;
         products.value = [];
     } else if (view.value === 'sectors') {
-        view.value = 'categories';
-        selectedCategory.value = null;
-        sectors.value = [];
+        resetToInsuranceProducts();
     }
+
     showAll.value = false;
 }
 
-const palettes = [
-    {bg: 'bg-orange-100', icon: 'text-orange-500'},
-    {bg: 'bg-blue-100', icon: 'text-blue-500'},
-    {bg: 'bg-emerald-100', icon: 'text-emerald-500'},
-    {bg: 'bg-violet-100', icon: 'text-violet-500'},
-    {bg: 'bg-rose-100', icon: 'text-rose-500'},
-    {bg: 'bg-amber-100', icon: 'text-amber-500'},
-];
+function startComparison() {
+    const firstItem = visibleItems.value[0] ?? items.value[0];
 
-const iconPaths = [
-    'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z',
-    'M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819',
-    'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z',
-    'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
-    'M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3',
-    'M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18',
-];
+    if (!firstItem) {
+        return;
+    }
+
+    if (view.value === 'categories') {
+        browseCategory(firstItem);
+    } else if (view.value === 'sectors') {
+        browseSector(firstItem);
+    }
+}
 </script>
 
 <template>
     <Head title="Comparez et économisez"/>
+
     <AppLayout>
-        <!-- Gradient section -->
-        <div class="min-h-[92vh] pb-16 pt-12">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section
+            class="relative isolate overflow-hidden bg-[#fbfcf9] text-slate-950 dark:bg-neutral-950 dark:text-white"
+        >
+            <div
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            >
+                <div class="absolute left-[48%] top-[-18rem] h-[58rem] w-[58rem] rounded-full border border-secondary-200/70 dark:border-secondary-900/30"/>
+                <div class="absolute left-[50%] top-[-11rem] h-[44rem] w-[44rem] rounded-full border border-primary-200/50 dark:border-primary-900/30"/>
+                <div class="absolute right-[-8rem] top-12 hidden h-[36rem] w-[36rem] rounded-full bg-secondary-50/90 lg:block dark:bg-secondary-950/30"/>
+            </div>
 
-                <!-- Breadcrumb / Title -->
-                <div class="mb-8">
-                    <template v-if="view === 'categories'">
-                        <h1 class="text-3xl font-bold sm:text-4xl">
-                            <span class="mr-2 text-orange-400">✦</span>
-                            Avec KleverKat, comparer c'est gagner
-                        </h1>
-                    </template>
-                    <template v-else>
-                        <div class="mb-5 flex items-center gap-3">
+            <div class="mx-auto grid min-h-[calc(100vh-6rem)] max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:px-8 lg:py-14">
+                <div class="max-w-3xl">
+                    <div v-if="view !== 'insuranceProducts' && view !== 'categories'" class="mb-7 flex flex-wrap items-center gap-3 text-sm">
+                        <button
+                            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-600 shadow-sm transition hover:border-secondary-200 hover:text-secondary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:text-white"
+                            type="button"
+                            @click="back"
+                        >
+                            <ArrowLeft class="size-4" stroke-width="2"/>
+                            Retour
+                        </button>
+
+                        <nav aria-label="Fil d’Ariane" class="flex items-center gap-2 text-slate-500 dark:text-white/50">
                             <button
-                                class="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/30"
-                                @click="back"
+                                class="transition hover:text-secondary-700 dark:hover:text-white"
+                                type="button"
+                                @click="resetToInsuranceProducts"
                             >
-                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2"
-                                     viewBox="0 0 24 24">
-                                    <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" stroke-linecap="round"
-                                          stroke-linejoin="round"/>
-                                </svg>
-                                Retour
+                                Accueil
                             </button>
-                            <nav class="flex items-center gap-2 text-sm text-white/80">
-                                <button class="hover:text-white transition-colors"
-                                        @click="view = 'categories'; selectedCategory = null; sectors = [];">Accueil
+                            <template v-if="selectedCategory">
+                                <span>/</span>
+                                <button
+                                    :class="view === 'sectors' ? 'font-semibold text-slate-800 dark:text-white' : 'transition hover:text-secondary-700 dark:hover:text-white'"
+                                    type="button"
+                                    @click="view === 'products' ? (view = 'sectors', selectedSector = null, products = []) : null"
+                                >
+                                    {{ selectedCategory.name }}
                                 </button>
-                                <template v-if="selectedCategory">
-                                    <span class="text-white/50">/</span>
-                                    <button
-                                        :class="view === 'sectors' ? 'text-white font-medium pointer-events-none' : 'hover:text-white transition-colors'"
-                                        @click="view === 'products' ? (view = 'sectors', selectedSector = null, products = []) : null"
-                                    >{{ selectedCategory.name }}
-                                    </button>
-                                </template>
-                                <template v-if="selectedSector">
-                                    <span class="text-white/50">/</span>
-                                    <span class="text-white font-medium">{{ selectedSector.name }}</span>
-                                </template>
-                            </nav>
+                            </template>
+                            <template v-if="selectedSector">
+                                <span>/</span>
+                                <span class="font-semibold text-slate-800 dark:text-white">{{ selectedSector.name }}</span>
+                            </template>
+                        </nav>
+                    </div>
+
+                    <h1 class="max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[5.25rem] dark:text-white">
+                        {{ viewCopy.title }}
+                    </h1>
+                    <p class="mt-5 max-w-xl text-lg leading-8 text-slate-600 dark:text-white/65">
+                        {{ viewCopy.subtitle }}
+                    </p>
+
+                    <div class="mt-8 inline-flex items-center gap-2 rounded-full bg-secondary-50 px-4 py-2 text-sm font-bold text-secondary-800 ring-1 ring-secondary-100 dark:bg-secondary-950/50 dark:text-secondary-200 dark:ring-secondary-800/60">
+                        <Sparkles class="size-4" stroke-width="2.25"/>
+                        {{ viewCopy.eyebrow }}
+                    </div>
+
+                    <div v-if="items.length === 0" class="mt-5 rounded-3xl border border-dashed border-slate-200 bg-white/80 p-10 text-center shadow-sm dark:border-white/10 dark:bg-white/5">
+                        <p class="text-base font-semibold text-slate-700 dark:text-white/75">
+                            Aucun élément disponible pour le moment.
+                        </p>
+                    </div>
+
+                    <template v-else>
+                        <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            <template v-for="(item, idx) in visibleItems" :key="item.id">
+                                <Link
+                                    v-if="view === 'products' || view === 'insuranceProducts'"
+                                    :href="getProductHref(item)"
+                                    class="group flex min-h-[8.5rem] flex-col justify-between rounded-[1.35rem] border border-slate-200/80 bg-white p-5 text-left shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-1 hover:border-secondary-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-600 dark:border-white/10 dark:bg-white/5 dark:shadow-none dark:hover:border-secondary-700"
+                                >
+                                    <div :class="['mb-5 flex size-12 items-center justify-center rounded-2xl', getItemVisual(item, idx).bg]">
+                                        <component
+                                            :is="getItemVisual(item, idx).icon"
+                                            :class="['size-6', getItemVisual(item, idx).text]"
+                                            stroke-width="2"
+                                        />
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <h3 class="text-base font-black tracking-[-0.02em] text-slate-950 dark:text-white">
+                                                {{ item.name }}
+                                            </h3>
+                                            <p class="mt-1 text-sm font-medium text-slate-500 dark:text-white/50">
+                                                {{ getItemMeta(item) }}
+                                            </p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-2 text-sm font-black text-secondary-700 transition group-hover:gap-3 dark:text-secondary-300">
+                                            {{ getCardActionLabel() }}
+                                            <ArrowRight class="size-4" stroke-width="2.25"/>
+                                        </span>
+                                    </div>
+                                </Link>
+
+                                <button
+                                    v-else
+                                    class="group flex min-h-[8.5rem] flex-col justify-between rounded-[1.35rem] border border-slate-200/80 bg-white p-5 text-left shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-1 hover:border-secondary-200 hover:shadow-[0_24px_70px_rgba(15,23,42,0.1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-600 dark:border-white/10 dark:bg-white/5 dark:shadow-none dark:hover:border-secondary-700"
+                                    type="button"
+                                    @click="view === 'categories' ? browseCategory(item) : browseSector(item)"
+                                >
+                                    <div :class="['mb-5 flex size-12 items-center justify-center rounded-2xl', getItemVisual(item, idx).bg]">
+                                        <component
+                                            :is="getItemVisual(item, idx).icon"
+                                            :class="['size-6', getItemVisual(item, idx).text]"
+                                            stroke-width="2"
+                                        />
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <h3 class="text-base font-black tracking-[-0.02em] text-slate-950 dark:text-white">
+                                                {{ item.name }}
+                                            </h3>
+                                            <p class="mt-1 text-sm font-medium text-slate-500 dark:text-white/50">
+                                                {{ getItemMeta(item) }}
+                                            </p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-2 text-sm font-black text-secondary-700 transition group-hover:gap-3 dark:text-secondary-300">
+                                            {{ getCardActionLabel() }}
+                                            <ArrowRight class="size-4" stroke-width="2.25"/>
+                                        </span>
+                                    </div>
+                                </button>
+                            </template>
                         </div>
-                        <h1 class="text-2xl font-bold text-white sm:text-3xl">
-                            <span class="mr-2 text-orange-400">✦</span>
-                            {{ view === 'sectors' ? selectedCategory?.name : selectedSector?.name }}
-                        </h1>
-                    </template>
-                </div>
 
-                <!-- Cards grid -->
-                <div v-if="items.length === 0"
-                     class="rounded-2xl bg-white/20 p-12 text-center text-white backdrop-blur-sm">
-                    <p class="text-lg font-medium opacity-80">Aucun élément disponible pour le moment.</p>
-                </div>
-
-                <template v-else>
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                        <template v-for="(item, idx) in visibleItems" :key="item.id">
-                            <!-- Product card → navigate to wizard -->
-                            <Link
-                                v-if="view === 'products'"
-                                :href="route('compare.wizard', [selectedCategory.slug, selectedSector.slug, item.slug])"
-                                class="group flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+                        <div v-if="hasMore" class="mt-5">
+                            <button
+                                class="inline-flex items-center gap-2 rounded-full px-1 text-sm font-black text-secondary-700 transition hover:text-secondary-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-600 dark:text-secondary-300 dark:hover:text-secondary-100"
+                                type="button"
+                                @click="showAll = true"
                             >
-                                <div
-                                    :class="['mb-4 flex size-16 items-center justify-center rounded-2xl', palettes[idx % palettes.length].bg]">
-                                    <svg :class="['size-8', palettes[idx % palettes.length].icon]" fill="none"
-                                         stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path :d="iconPaths[idx % iconPaths.length]" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                                <h3 class="mb-1 text-sm font-semibold text-zinc-900 sm:text-base">{{ item.name }}</h3>
-                                <p v-if="item.offers_count > 0" class="text-xs font-medium text-blue-600 sm:text-sm">
-                                    {{ item.offers_count }} offre{{ item.offers_count > 1 ? 's' : '' }}
-                                </p>
-                                <p v-else class="text-xs text-zinc-400">Bientôt disponible</p>
+                                Voir plus de choix
+                                <ArrowRight class="size-4" stroke-width="2.25"/>
+                            </button>
+                        </div>
+
+                        <div class="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <Link
+                                v-if="view === 'insuranceProducts' && primaryProductHref"
+                                :href="primaryProductHref"
+                                class="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-primary-600 px-8 text-base font-black text-white shadow-[0_18px_45px_rgba(217,119,6,0.3)] transition hover:-translate-y-0.5 hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-600"
+                            >
+                                {{ primaryActionLabel }}
+                                <ArrowRight class="size-5" stroke-width="2.5"/>
                             </Link>
 
-                            <!-- Category / Sector card → drill down -->
                             <button
-                                v-else
-                                class="group flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
-                                @click="view === 'categories' ? browseCategory(item) : browseSector(item)"
+                                v-else-if="view !== 'products'"
+                                class="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-primary-600 px-8 text-base font-black text-white shadow-[0_18px_45px_rgba(217,119,6,0.3)] transition hover:-translate-y-0.5 hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-600"
+                                type="button"
+                                @click="startComparison"
                             >
-                                <div
-                                    :class="['mb-4 flex size-16 items-center justify-center rounded-2xl', palettes[idx % palettes.length].bg]">
-                                    <svg :class="['size-8', palettes[idx % palettes.length].icon]" fill="none"
-                                         stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path :d="iconPaths[idx % iconPaths.length]" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                                <h3 class="mb-1 text-sm font-semibold text-zinc-900 sm:text-base">{{ item.name }}</h3>
-                                <p class="text-xs font-medium text-blue-600 sm:text-sm">
-                                    <template v-if="view === 'categories'">{{ item.sectors_count }}
-                                        secteur{{ item.sectors_count > 1 ? 's' : '' }}
-                                    </template>
-                                    <template v-else>{{ item.products_count }}
-                                        produit{{ item.products_count > 1 ? 's' : '' }}
-                                    </template>
-                                </p>
+                                {{ primaryActionLabel }}
+                                <ArrowRight class="size-5" stroke-width="2.5"/>
                             </button>
-                        </template>
-                    </div>
 
-                    <!-- Voir plus -->
-                    <div v-if="hasMore" class="mt-8 text-center">
-                        <button
-                            class="inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-white/80"
-                            @click="showAll = true"
+                            <Link
+                                v-else-if="visibleItems.length > 0"
+                                :href="route('compare.wizard', [selectedCategory.slug, selectedSector.slug, visibleItems[0].slug])"
+                                class="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-primary-600 px-8 text-base font-black text-white shadow-[0_18px_45px_rgba(217,119,6,0.3)] transition hover:-translate-y-0.5 hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-600"
+                            >
+                                {{ primaryActionLabel }}
+                                <ArrowRight class="size-5" stroke-width="2.5"/>
+                            </Link>
+
+                            <Link
+                                :href="route('compare.categories')"
+                                class="inline-flex h-14 items-center justify-center gap-2 rounded-full px-5 text-base font-black text-secondary-700 transition hover:text-secondary-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-600 dark:text-secondary-300 dark:hover:text-secondary-100"
+                            >
+                                Explorer les guides
+                                <ArrowRight class="size-4" stroke-width="2.5"/>
+                            </Link>
+                        </div>
+                    </template>
+
+                    <div class="mt-7 flex flex-wrap gap-5">
+                        <div
+                            v-for="item in reassuranceItems"
+                            :key="item.label"
+                            class="inline-flex items-center gap-3 text-sm font-black text-slate-800 dark:text-white/75"
                         >
-                            Voir plus
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
+                            <span class="flex size-10 items-center justify-center rounded-full bg-secondary-50 text-secondary-700 ring-1 ring-secondary-100 dark:bg-secondary-950/50 dark:text-secondary-300 dark:ring-secondary-800/60">
+                                <component :is="item.icon" class="size-5" stroke-width="2.25"/>
+                            </span>
+                            {{ item.label }}
+                        </div>
                     </div>
-                </template>
-            </div>
-        </div>
+                </div>
 
-        <!-- Footer -->
-        <footer class="border-t border-zinc-100 bg-white py-6 text-center text-sm text-zinc-400">
+                <aside class="relative mx-auto hidden min-h-[34rem] w-full max-w-xl lg:block" aria-hidden="true">
+                    <div class="absolute inset-x-6 top-12 h-[30rem] rounded-full bg-secondary-50 shadow-[0_40px_120px_rgba(4,120,87,0.12)] dark:bg-secondary-950/40"/>
+                    <img
+                        alt=""
+                        class="absolute bottom-0 left-1/2 max-h-[39rem] w-auto max-w-none -translate-x-1/2 object-contain drop-shadow-[0_24px_38px_rgba(15,23,42,0.16)]"
+                        src="/images/kleverkat-advisor.png"
+                    >
+                </aside>
+
+                <div class="mx-auto mt-2 max-w-sm lg:hidden" aria-hidden="true">
+                    <img
+                        alt=""
+                        class="mx-auto max-h-80 w-auto object-contain drop-shadow-[0_20px_35px_rgba(15,23,42,0.14)]"
+                        src="/images/kleverkat-advisor.png"
+                    >
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-slate-100 bg-white py-6 text-center text-sm text-slate-400 dark:border-white/10 dark:bg-neutral-950 dark:text-white/40">
             © {{ new Date().getFullYear() }} KleverKat — Comparateur en ligne gratuit
         </footer>
     </AppLayout>
