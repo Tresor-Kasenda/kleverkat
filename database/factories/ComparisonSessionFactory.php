@@ -26,8 +26,8 @@ class ComparisonSessionFactory extends Factory
             'answers_json' => [],
             'started_at' => now(),
             'completed_at' => null,
-            'ip_address' => fake()->ipv4(),
-            'user_agent' => fake()->userAgent(),
+            'ip_address' => $this->faker->ipv4(),
+            'user_agent' => $this->faker->userAgent(),
         ];
     }
 

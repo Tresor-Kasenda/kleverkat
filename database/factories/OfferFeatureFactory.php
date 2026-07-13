@@ -15,10 +15,10 @@ class OfferFeatureFactory extends Factory
     {
         return [
             'offer_id' => Offer::factory(),
-            'label' => fake()->word(),
-            'value' => fake()->boolean(60) ? fake()->sentence() : null,
-            'is_highlight' => fake()->boolean(20),
-            'sort_order' => fake()->numberBetween(0, 20),
+            'label' => $this->faker->word(),
+            'value' => $this->faker->boolean(60) ? $this->faker->sentence() : null,
+            'is_highlight' => $this->faker->boolean(20),
+            'sort_order' => $this->faker->numberBetween(0, 20),
         ];
     }
 }

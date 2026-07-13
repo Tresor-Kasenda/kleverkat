@@ -17,13 +17,13 @@ class QuestionFactory extends Factory
      */
     public function definition(): array
     {
-        $inputType = fake()->randomElement(QuestionInputType::cases());
+        $inputType = $this->faker->randomElement(QuestionInputType::cases());
 
         return [
             'questionnaire_id' => Questionnaire::factory(),
-            'step_key' => fake()->randomElement(['profil', 'vehicule', 'conducteur', 'historique']),
-            'field_key' => fake()->unique()->word(),
-            'label' => fake()->sentence(5, true).'?',
+            'step_key' => $this->faker->randomElement(['profil', 'vehicule', 'conducteur', 'historique']),
+            'field_key' => $this->faker->unique()->word(),
+            'label' => $this->faker->sentence(5, true).'?',
             'input_type' => $inputType,
             'options_json' => $inputType->hasOptions() ? ['oui' => 'Oui', 'non' => 'Non'] : null,
             'validation_rules_json' => ['required'],

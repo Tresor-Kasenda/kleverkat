@@ -24,8 +24,8 @@ class ComparisonResultFactory extends Factory
             'offer_id' => $offer->id,
             'company_id' => $offer->company_id,
             'is_eligible' => true,
-            'score' => fake()->randomFloat(2, 0, 100),
-            'calculated_price' => fake()->randomFloat(2, 10, 500),
+            'score' => $this->faker->randomFloat(2, 0, 100),
+            'calculated_price' => $this->faker->randomFloat(2, 10, 500),
             'explanation_json' => ['eligibility' => [], 'scoring' => [], 'pricing' => []],
             'rank_position' => 1,
         ];

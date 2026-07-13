@@ -18,7 +18,7 @@ class QuestionnaireFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
-            'name' => fake()->sentence(3),
+            'name' => $this->faker->sentence(3),
             'version' => 1,
             'is_active' => true,
         ];

@@ -15,18 +15,18 @@ class OfferFactory extends Factory
 {
     public function definition(): array
     {
-        $name = fake()->unique()->words(3, true);
+        $name = $this->faker->unique()->words(3, true);
 
         return [
             'company_id' => Company::factory(),
             'product_id' => Product::factory(),
             'name' => Str::title($name),
             'slug' => Str::slug($name),
-            'short_description' => fake()->sentence(),
-            'long_description' => fake()->paragraph(),
-            'base_price' => fake()->randomFloat(2, 5, 500),
-            'price_note' => fake()->boolean(30) ? fake()->sentence() : null,
-            'sort_order' => fake()->numberBetween(0, 50),
+            'short_description' => $this->faker->sentence(),
+            'long_description' => $this->faker->paragraph(),
+            'base_price' => $this->faker->randomFloat(2, 5, 500),
+            'price_note' => $this->faker->boolean(30) ? $this->faker->sentence() : null,
+            'sort_order' => $this->faker->numberBetween(0, 50),
             'is_active' => true,
             'is_featured' => false,
         ];

@@ -19,7 +19,7 @@ class CompanyFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->unique()->company();
+        $name = $this->faker->unique()->company();
 
         return [
             'category_id' => Category::factory(),
@@ -27,17 +27,17 @@ class CompanyFactory extends Factory
             'manager_id' => null,
             'name' => $name,
             'slug' => Str::slug($name),
-            'logo_path' => fake()->boolean(30) ? 'logos/'.Str::slug($name).'.png' : null,
-            'description' => fake()->paragraph(),
-            'website_url' => fake()->url(),
-            'support_email' => fake()->companyEmail(),
-            'support_phone' => fake()->numerify('+243 ### ### ###'),
-            'contact_name' => fake()->name(),
-            'address_line_1' => fake()->streetAddress(),
-            'address_line_2' => fake()->boolean(35) ? fake()->streetAddress() : null,
-            'city' => fake()->city(),
-            'postal_code' => fake()->postcode(),
-            'country' => fake()->country(),
+            'logo_path' => $this->faker->boolean(30) ? 'logos/'.Str::slug($name).'.png' : null,
+            'description' => $this->faker->paragraph(),
+            'website_url' => $this->faker->url(),
+            'support_email' => $this->faker->companyEmail(),
+            'support_phone' => $this->faker->numerify('+243 ### ### ###'),
+            'contact_name' => $this->faker->name(),
+            'address_line_1' => $this->faker->streetAddress(),
+            'address_line_2' => $this->faker->boolean(35) ? $this->faker->streetAddress() : null,
+            'city' => $this->faker->city(),
+            'postal_code' => $this->faker->postcode(),
+            'country' => $this->faker->country(),
             'is_active' => true,
         ];
     }
